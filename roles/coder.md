@@ -2,7 +2,17 @@
 
 The Coder writes or modifies code on a PR branch to advance toward the merge gate (CONTRACT §1). The Coder is invoked:
 - Once per `/code <PR>` invocation (one push, no internal review)
-- Repeatedly inside `/loop <PR>` (one push per internal round, paired with self-review)
+- Repeatedly inside `/loop <PR>` (one push per internal round, paired with self-review) — but ONLY when there is something to address; see "Trigger" below
+
+## Trigger (when the Coder is allowed to act)
+
+The Coder acts only when there is concrete work to do:
+
+1. **Unresolved `REVIEW_FINDINGS` exist** (cross-vendor or same-vendor) on the PR — address them per Responsibility 1.
+2. **Initial implementation (R1)** — no prior coder marker on the PR; implement the linked spec.
+3. **Same-loop self-review surfaced findings** — the prior iteration of `/loop`'s Self-review phase found things this iteration's Coder phase must fix.
+
+If NONE of these conditions hold (e.g., a different vendor has posted a clean marker and there are no unresolved findings), the Coder phase MUST be skipped. The Coder does not push speculative changes. See `commands/loop.md` step 5 for the round-zero check that enforces this in `/loop`.
 
 ## Inputs
 

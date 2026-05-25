@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.3 — 2026-05-25
+
+### Docs (clarification, no behavior change for correct agents)
+- **`commands/loop.md`** — add a "round-zero check" step that explicitly skips the Coder phase when the latest PR marker is a clean marker (REVIEW_CLEAN / LOOP_DONE) from any vendor AND no unresolved REVIEW_FINDINGS exist. Without this, a strict-vs-lenient reading of step 5a ("Coder phase: implement code, run gates, push") could let a lenient agent push speculative changes when there's nothing to address — which would (a) stale the prior vendor's clean marker, (b) waste compute, (c) risk introducing new bugs the prior vendor would then have to re-flag.
+- **`commands/loop.md`** — explicit "Round-zero exit" edge case documenting that `Internal rounds taken: 0` is the correct LOOP_DONE state when a different vendor's clean marker already covers the existing HEAD AND this vendor's self-review also finds it clean. This is the canonical "second vendor confirms first vendor's clean review" path.
+- **`commands/loop.md`** — print-to-user note distinguishing the round-zero case from the normal case: when /loop's round-zero check fires AND a different vendor has already posted a clean marker, the merge gate is satisfied immediately; the user should be told that rather than "switch to another vendor's CLI and run /review".
+- **`roles/coder.md`** — add a "Trigger (when the Coder is allowed to act)" section enumerating the three conditions under which the Coder may act (unresolved findings, initial R1, same-loop self-review findings). Forbids speculative pushes outside these conditions.
+
+No changes to CONTRACT.md, marker formats, escalation triggers, or merge gate. Existing correct agents continue to work; the clarification removes a reading ambiguity that could cause lenient agents to push speculative commits and stale prior vendor clean markers.
+
 ## v1.0.2 — 2026-05-25
 
 ### Docs (clarification, no behavior change)
