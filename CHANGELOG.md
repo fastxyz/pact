@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.1 — 2026-05-25
+
+### Docs
+- **`README.md`** — reframe the primary usage as the URL-only path: prime each session once with "Learn https://github.com/fastxyz/pact", then issue short commands like `/code 282`, `/loop [10] 282`, `/review 282`. No local install needed. The "install as native slash commands" path is demoted to an Optional section for frequent local use. This better matches ephemeral / VPS-hopping / fresh-session workflows where per-machine setup is friction.
+- No content changes to `CONTRACT.md`, `roles/`, `commands/`, or `adapters/`. Behavior identical to v1.0.0.
+
 ## v1.0.0 — 2026-05-25
 
 Initial release.
