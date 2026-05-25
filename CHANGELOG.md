@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.2 — 2026-05-25
+
+### Docs (clarification, no behavior change)
+- **`commands/code.md`** — clarify that `/code` accepts findings from ANY vendor (different OR same), not only from a cross-vendor REVIEW_FINDINGS marker. Prior wording ("from a different vendor", "from another vendor") could be misread by a strict agent as a hard restriction, breaking composability with `/review` in the same vendor's window. The merge gate (§6) is enforced at the gate, not at the source of findings.
+- **`commands/loop.md`** — same clarification on the "ingest cross-vendor findings" step; add an "Equivalence to manual composition" note explaining that `/loop` is the automated form of alternating `/review` + `/code` in one vendor's window, and the two produce semantically equivalent results.
+
+No changes to `CONTRACT.md`, marker formats, escalation triggers, or merge gate. Existing agents continue to work; the clarification only removes a reading ambiguity that could cause stricter agents to refuse valid same-vendor `/code` invocations.
+
 ## v1.0.1 — 2026-05-25
 
 ### Docs

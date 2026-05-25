@@ -4,6 +4,8 @@
 **Where it runs:** one vendor's CLI window.
 **What it does:** drives the running vendor's internal code ↔ self-review ↔ fix cycle, up to N internal rounds (default 5), until the vendor's own multi-lane review reports P0=P1=P2=0 at HEAD. Then posts `LOOP_DONE_<vendor>_<sha>`.
 
+**Equivalence to manual composition.** `/loop` is the automated form of alternating `/review` and `/code` in the same vendor's window. A user can always manually compose the same outcome: run `/review`, then `/code` to address the same-vendor findings, then `/review` again, repeat until clean. The automated `/loop` and the manual composition produce semantically equivalent results — the difference is operational convenience, not contract semantics.
+
 ## Syntax for `[N]`
 
 The optional `[N]` is the max-internal-rounds cap, in square brackets. Default 5. Either position accepted:
@@ -18,7 +20,7 @@ The adapter is responsible for parsing both orders.
 1. Read `CONTRACT.md`, `roles/coder.md`, `roles/reviewer.md`
 2. Parse `[N]` from args; default 5 if absent
 3. Read the PR state (same as `/code` step 2)
-4. If the latest marker is a `REVIEW_FINDINGS` from a different vendor: ingest those findings — the Coder phase must address them
+4. If the latest unresolved `REVIEW_FINDINGS` marker is from ANY vendor (different OR same): ingest those findings — the Coder phase must address them. The cross-vendor merge gate (§6) is enforced at the gate, not at the source of findings.
 5. Enter the internal loop (track internal round count `n`, starting at 1):
    a. **Coder phase** (per `roles/coder.md`): implement code, run gates, push
    b. **Self-review phase** (per `roles/reviewer.md`): run the three lanes on the new HEAD
