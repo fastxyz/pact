@@ -1,0 +1,8 @@
+# Python validator working files
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# OS noise
+.DS_Store
+*.swp
