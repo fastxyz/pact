@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.0.6 — 2026-05-26
+
+### Fix (v1.0.5 round-zero check was wrong; this version replaces it)
+
+**v1.0.5 added a "round-zero check" to `commands/review.md` that fired when a different-vendor REVIEW_CLEAN/LOOP_DONE existed on the current HEAD and exited without posting** — on the premise that "the merge gate is already satisfied." That premise is wrong: CONTRACT §1 requires TWO different vendors' clean markers, not one. A different-vendor clean marker alone leaves the gate at 1/2; this vendor's review is exactly what produces the second vote.
+
+If v1.0.5's round-zero had actually fired on a real PR with only one prior vendor's clean marker, the running vendor would have exited without contributing the second vote and the merge gate would have been stuck at 1/2 indefinitely. The check was caught by the very PR audit it was meant to validate (fastxyz/fast-shop, 2026-05-26) before any agent applied it in anger.
+
+**v1.0.6 replaces v1.0.5's broken round-zero check with a narrow same-HEAD duplicate guard** (`commands/review.md` step 3):
+
+- Fires ONLY when `REVIEW_CLEAN_<this-vendor>_<sha>` or `LOOP_DONE_<this-vendor>_<sha>` already exists on the current HEAD AND there are no unresolved REVIEW_FINDINGS. The condition is about THIS vendor's own prior coverage, not about another vendor's.
+- When it fires, this vendor has already cast its vote on this HEAD; re-posting is a same-vendor duplicate, not a fresh vote. The guard prints "This vendor already cleared HEAD `<sha>` at <prior timestamp>" plus a state-derived merge-gate status line and exits without posting.
+- A different vendor's clean marker on its own NEVER triggers the guard — this vendor's review is still needed to contribute the second vote.
+
+**The actual fix for the original "wrong closing line" failure mode is kept**: the required `Existing markers on HEAD:` field in CONTRACT §5 (REVIEW_CLEAN + REVIEW_FINDINGS schemas, unchanged from v1.0.5) plus the state-derived closing-line spec in `commands/review.md` step 9 (three cases enumerated). When the agent enumerates prior markers as a precondition for posting, the closing line cannot template "needs another vendor" while a prior vendor's marker is sitting in the body.
+
+**Asymmetric with `/loop`'s round-zero on purpose.** `/loop`'s round-zero exit POSTS LOOP_DONE (with `Internal rounds taken: 0`) because that IS how a /loop invocation contributes to the merge gate when there's no Coder work to do — a real review with zero rounds, still a vote. `/review`'s same-HEAD duplicate guard is different: this vendor has ALREADY posted its vote on this HEAD; re-posting would be a same-vendor duplicate. v1.0.5 modeled `/review`'s round-zero on `/loop`'s shape but dropped the "still post the marker" half, which is the half that contributes to the gate.
+
+No changes to marker schemas, lane structure, severities, escalation triggers, or the merge gate definition. The `Existing markers on HEAD` field and validator enforcement remain (v1.0.5).
+
 ## v1.0.5 — 2026-05-26
 
 ### Docs + schema (closes a recurring failure mode)

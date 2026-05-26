@@ -1,7 +1,7 @@
 # PACT — Agent Review Contract
 
-**Version:** v1.0.5
-**Canonical URL:** https://raw.githubusercontent.com/fastxyz/pact/v1.0.5/CONTRACT.md
+**Version:** v1.0.6
+**Canonical URL:** https://raw.githubusercontent.com/fastxyz/pact/v1.0.6/CONTRACT.md
 
 This document is the canonical rule book for `fastxyz/pact`. Agents (Claude, Codex, and any future LLM) follow this contract when working on a PR governed by PACT. Projects opt in by adding a one-line pin to their `AGENTS.md` / `CLAUDE.md` (see this repo's README).
 
