@@ -53,6 +53,7 @@ class TestReviewFindings(unittest.TestCase):
 Vendor: claude-code
 Round: 1
 HEAD reviewed: b8e1d44e123456789abcdef1234567890abcdef1
+Existing markers on HEAD: none
 Per-lane counts:
   CQ: P0=0 P1=1 P2=0 P3=0 Nit=0
   SP: P0=0 P1=0 P2=0 P3=0 Nit=0
@@ -74,6 +75,7 @@ CI status: green
 
 Vendor: claude-code
 HEAD reviewed: abc1234d567890abcdef1234567890abcdef1234
+Existing markers on HEAD: none
 Per-lane findings:
   CQ: P0=0 P1=0 P2=1 P3=0 Nit=0
   SP: P0=0 P1=0 P2=0 P3=0 Nit=0
@@ -84,6 +86,69 @@ CI status: green
         result = vm.validate_marker(text)
         self.assertFalse(result.ok)
         self.assertIn("P0/P1/P2", " ".join(result.errors).replace(" ", "/").lower() + " ".join(result.errors))
+
+    def test_review_clean_with_existing_marker_field_listed(self):
+        """v1.0.5: REVIEW_CLEAN with a prior other-vendor clean marker listed in
+        the Existing markers field is the canonical 'second vendor confirms gate'
+        shape. Validator accepts it."""
+        text = """REVIEW_CLEAN_codex-cli_abc1234
+
+Vendor: codex-cli
+HEAD reviewed: abc1234d567890abcdef1234567890abcdef1234
+Existing markers on HEAD:
+  - REVIEW_CLEAN_claude-code_abc1234  (posted 2026-05-26T02:42:25Z)
+Per-lane findings:
+  CQ: P0=0 P1=0 P2=0 P3=0 Nit=0
+  SP: P0=0 P1=0 P2=0 P3=0 Nit=0
+  TC: P0=0 P1=0 P2=0 P3=0 Nit=0
+Local gates on this HEAD: typecheck=PASS, lint=PASS, test=PASS 100/100
+CI status: green
+"""
+        result = vm.validate_marker(text)
+        self.assertTrue(result.ok, result.errors)
+        self.assertEqual(result.kind, "REVIEW_CLEAN")
+
+    def test_review_clean_missing_existing_markers_field_fails(self):
+        """v1.0.5: REVIEW_CLEAN without the 'Existing markers on HEAD' field is
+        a contract violation. This is the field that forces the reviewer to read
+        the PR state before posting, enabling /review's round-zero check and
+        preventing stale 'needs another vendor' closing lines."""
+        text = """REVIEW_CLEAN_claude-code_abc1234
+
+Vendor: claude-code
+HEAD reviewed: abc1234d567890abcdef1234567890abcdef1234
+Per-lane findings:
+  CQ: P0=0 P1=0 P2=0 P3=0 Nit=0
+  SP: P0=0 P1=0 P2=0 P3=0 Nit=0
+  TC: P0=0 P1=0 P2=0 P3=0 Nit=0
+Local gates on this HEAD: typecheck=PASS, lint=PASS, test=PASS 100/100
+CI status: green
+"""
+        result = vm.validate_marker(text)
+        self.assertFalse(result.ok)
+        self.assertIn("Existing markers on HEAD", " ".join(result.errors))
+
+    def test_review_findings_missing_existing_markers_field_fails(self):
+        """v1.0.5: REVIEW_FINDINGS also requires the 'Existing markers on HEAD'
+        field. Even when posting findings, the reviewer must enumerate prior
+        markers so the next vendor can see the full state."""
+        text = """REVIEW_FINDINGS_claude-code_R1_b8e1d44
+
+Vendor: claude-code
+Round: 1
+HEAD reviewed: b8e1d44e123456789abcdef1234567890abcdef1
+Per-lane counts:
+  CQ: P0=0 P1=1 P2=0 P3=0 Nit=0
+  SP: P0=0 P1=0 P2=0 P3=0 Nit=0
+  TC: P0=0 P1=0 P2=0 P3=0 Nit=0
+Findings (each line-anchored):
+  - [CQ P1 #1] src/foo.ts:42 — Inconsistent error handling
+Local gates on this HEAD: typecheck=PASS, lint=PASS, test=PASS 100/100
+CI status: green
+"""
+        result = vm.validate_marker(text)
+        self.assertFalse(result.ok)
+        self.assertIn("Existing markers on HEAD", " ".join(result.errors))
 
 
 class TestLoopDone(unittest.TestCase):

@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.0.5 — 2026-05-26
+
+### Docs + schema (closes a recurring failure mode)
+
+**Failure mode.** An agent runs `/review <PR>` without first reading the PR's existing markers, posts its own `REVIEW_CLEAN`, and closes with the templated "needs another vendor's clean marker on this HEAD" line — even when a different vendor's clean marker already covers that exact HEAD and the merge gate was satisfied minutes earlier. Wasted compute, duplicate marker on the PR, and a closing line that contradicts the actual gate state. Observed at least twice in real use of `fastxyz/pact` v1.0.4 (claude-code adapter).
+
+**Two changes close it:**
+
+- **`commands/review.md`** — add a "round-zero check" step (new step 3, between "read PR state" and "compute R counter") that mirrors `/loop`'s round-zero check from v1.0.3. If a different-vendor `REVIEW_CLEAN_*` or `LOOP_DONE_*` exists on the current HEAD AND no unresolved `REVIEW_FINDINGS_*` exist anywhere on the PR, the merge gate is already satisfied — print "Merge gate satisfied on HEAD `<sha>`" and EXIT. Do not run the lanes, do not run local gates, do not post a marker. Force-override available via `/review <PR> --cross-verify` when the user has a substantive reason to triple-check.
+- **`commands/review.md`** — closing line MUST be derived from the marker body's `Existing markers on HEAD` field, never from a template. Three cases enumerated (this clean + prior clean = gate satisfied; this clean alone = needs other vendor; findings = run /code or /loop).
+- **`CONTRACT.md`** — add the required `Existing markers on HEAD <sha>:` field to both `REVIEW_CLEAN` and `REVIEW_FINDINGS` marker schemas. The field enumerates every prior marker on the current HEAD (with ISO timestamps). The reviewer cannot post a marker without producing this list, which forces the round-zero check to be observed in practice even if the agent skipped step 3.
+
+The two changes are intentionally redundant — they catch the same failure at different layers. The round-zero check prevents the redundant marker in the common case. The required schema field catches the residual case where the agent forgets the round-zero check too: it cannot fill out the marker body without enumerating prior markers, which surfaces the duplicate before posting.
+
+**Round-zero exit added to edge cases.** `commands/review.md` Edge cases now explicitly documents the round-zero exit as the canonical "second vendor confirms gate already met" path — the symmetric counterpart to `/loop`'s round-zero exit from v1.0.3. `/review` is the appropriate command when the user wants a literal review with no Coder phase even allocated; the round-zero check makes the two effectively equivalent when there's nothing to review.
+
+No changes to marker types, severities, lanes, escalation triggers, or the merge gate definition. v1.0.4 agents continue to work; v1.0.5 adds a required field (gracefully detectable — missing field is a contract violation, validator updated).
+
 ## v1.0.3 — 2026-05-25
 
 ### Docs (clarification, no behavior change for correct agents)

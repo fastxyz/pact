@@ -122,6 +122,19 @@ def validate_marker(text: str) -> ValidationResult:
                         f"REVIEW_CLEAN lane {m3.group(1)} has P0/P1/P2 non-zero (P0={p0} P1={p1} P2={p2}); use REVIEW_FINDINGS instead"
                     )
 
+    # v1.0.5: REVIEW markers MUST enumerate existing markers on the current
+    # HEAD. The field forces the reviewer to read the PR state before posting,
+    # which both enables /review's round-zero check (commands/review.md step 3)
+    # and prevents stale "needs another vendor" closing lines when the merge
+    # gate is already satisfied by a prior vendor's clean marker.
+    if result.kind in ("REVIEW_CLEAN", "REVIEW_FINDINGS"):
+        if "Existing markers on HEAD" not in fields_map:
+            result.ok = False
+            result.errors.append(
+                f"{result.kind} missing required field: 'Existing markers on HEAD' "
+                "(v1.0.5 schema; list other-vendor markers first, or 'none')"
+            )
+
     return result
 
 

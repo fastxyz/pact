@@ -1,7 +1,7 @@
 # PACT — Agent Review Contract
 
-**Version:** v1.0.0
-**Canonical URL:** https://raw.githubusercontent.com/fastxyz/pact/v1.0.0/CONTRACT.md
+**Version:** v1.0.5
+**Canonical URL:** https://raw.githubusercontent.com/fastxyz/pact/v1.0.5/CONTRACT.md
 
 This document is the canonical rule book for `fastxyz/pact`. Agents (Claude, Codex, and any future LLM) follow this contract when working on a PR governed by PACT. Projects opt in by adding a one-line pin to their `AGENTS.md` / `CLAUDE.md` (see this repo's README).
 
@@ -90,6 +90,11 @@ REVIEW_CLEAN_<vendor>_<sha>
 
 Vendor: <vendor name>
 HEAD reviewed: <full commit SHA>
+Existing markers on HEAD:
+  - REVIEW_CLEAN_<other-vendor>_<sha>  (posted <ISO timestamp>)
+  - LOOP_DONE_<other-vendor>_<sha>  (posted <ISO timestamp>)
+  - ...
+  (List other-vendor markers first, then same-vendor. Use "none" if no prior markers.)
 Per-lane findings:
   CQ: P0=0 P1=0 P2=0 P3=<w> Nit=<n>
   SP: P0=0 P1=0 P2=0 P3=<w> Nit=<n>
@@ -101,6 +106,8 @@ Local gates on this HEAD: typecheck=PASS, lint=PASS, test=PASS <n>/<m>
 CI status: <green|red|not fired>
 ```
 
+The `Existing markers on HEAD` field is REQUIRED. Its purpose is to force the reviewer to enumerate prior markers as a precondition for posting — the closing line ("merge gate satisfied" vs "needs another vendor") MUST be derived from this field, not from a template. A `REVIEW_CLEAN` posted without enumerating existing markers is a contract violation. `/review`'s round-zero check (see `commands/review.md` step 3) uses the same enumeration to decide whether to skip the review entirely.
+
 **REVIEW_FINDINGS** — posted by `/review` when the running vendor's external review finds at least one P0/P1/P2:
 
 ```
@@ -109,6 +116,11 @@ REVIEW_FINDINGS_<vendor>_R<N>_<sha>
 Vendor: <vendor name>
 Round (this vendor's nth findings post on this PR): <N>
 HEAD reviewed: <full commit SHA>
+Existing markers on HEAD:
+  - REVIEW_CLEAN_<other-vendor>_<sha>  (posted <ISO timestamp>)
+  - LOOP_DONE_<other-vendor>_<sha>  (posted <ISO timestamp>)
+  - ...
+  (List other-vendor markers first, then same-vendor. Use "none" if no prior markers.)
 Per-lane counts:
   CQ: P0=<x> P1=<y> P2=<z> P3=<w> Nit=<n>
   SP: P0=<x> P1=<y> P2=<z> P3=<w> Nit=<n>
@@ -120,6 +132,8 @@ Findings (each line-anchored):
 Local gates on this HEAD: typecheck=<PASS|FAIL>, lint=<PASS|FAIL>, test=<PASS:<n>/<m>|FAIL>
 CI status: <green|red|not fired>
 ```
+
+The `Existing markers on HEAD` field is REQUIRED on both `REVIEW_CLEAN` and `REVIEW_FINDINGS`. See the `REVIEW_CLEAN` schema note above for rationale: it forces the reviewer to enumerate prior markers as a precondition for posting, which both enables the round-zero check (`commands/review.md` step 3) and prevents stale "needs another vendor" closing lines when the gate is already satisfied. A non-trivial `REVIEW_FINDINGS` whose body shows a different vendor already posted a clean marker on the same HEAD is a contract-aware signal that something materially new must have changed (e.g., a regression the prior vendor missed) — surface that in the findings, don't bury it.
 
 **Round-counter rules:** `R<N>` appears only on `REVIEW_FINDINGS`. Each vendor maintains its own R counter, incrementing only when that vendor posts a new `REVIEW_FINDINGS`. `CODE_DONE`, `LOOP_DONE`, and `REVIEW_CLEAN` do not carry R counters (they are terminal verdicts for that invocation, or in `CODE_DONE`'s case, a "your turn" signal).
 
