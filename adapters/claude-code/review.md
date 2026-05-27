@@ -15,23 +15,27 @@ You are running the PACT `/review` command (see `commands/review.md`). Vendor id
 
 ## Execution
 
-1. Read PR state (same as `/code` step 1).
+1. Read PR state (same as `/code` step 1), including the full list of existing markers on the current HEAD.
 2. Compute this vendor's R counter: count prior `REVIEW_FINDINGS_claude-code_R*` markers; next R = count + 1.
 3. Dispatch three parallel lane sub-agents via the `Agent` tool:
    - CQ: `subagent_type="Explore"`, prompt = "Review the diff of PR <N> HEAD <sha> on lane CQ per fastxyz/pact roles/reviewer.md. Report findings as `[CQ <sev>] <file:line> — <summary>` and per-severity counts. No code changes."
    - SP: similar with lane=SP and the linked spec from the PR description
    - TC: similar with lane=TC, allowed to run gates locally
-4. Aggregate findings.
+4. Aggregate findings into per-lane counts and all-lane P0/P1/P2/P3 totals.
 5. If local CI did not run, run gates via `Bash` (`npm run typecheck && npm run lint && npm test` or the project's equivalent).
-6. Emit the marker:
+6. Emit the marker. The marker first line MUST include P0/P1/P2/P3 totals immediately after the marker title; do not put a bare marker title on the first line:
 
    **If 0 P0/P1/P2 AND all gates PASS:**
 
    ```
-   REVIEW_CLEAN_claude-code_<short-sha>
+   REVIEW_CLEAN_claude-code_<short-sha> P0=0 P1=0 P2=0 P3=<total-p3>
 
    Vendor: claude-code
    HEAD reviewed: <full SHA>
+   Existing markers on HEAD:
+     - <prior marker title on this HEAD>  (posted <ISO timestamp>)
+     - ...
+     (Use "none" if no prior markers.)
    Per-lane findings:
      CQ: P0=0 P1=0 P2=0 P3=<w> Nit=<nit>
      SP: P0=0 P1=0 P2=0 P3=<w> Nit=<nit>
@@ -45,11 +49,15 @@ You are running the PACT `/review` command (see `commands/review.md`). Vendor id
    **Else:**
 
    ```
-   REVIEW_FINDINGS_claude-code_R<N>_<short-sha>
+   REVIEW_FINDINGS_claude-code_R<N>_<short-sha> P0=<total-p0> P1=<total-p1> P2=<total-p2> P3=<total-p3>
 
    Vendor: claude-code
    Round (this vendor's nth findings post on this PR): <N>
    HEAD reviewed: <full SHA>
+   Existing markers on HEAD:
+     - <prior marker title on this HEAD>  (posted <ISO timestamp>)
+     - ...
+     (Use "none" if no prior markers.)
    Per-lane counts:
      CQ: P0=<x> P1=<y> P2=<z> P3=<w> Nit=<nit>
      SP: P0=<x> P1=<y> P2=<z> P3=<w> Nit=<nit>

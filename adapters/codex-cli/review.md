@@ -14,20 +14,24 @@ You are executing PACT (`fastxyz/pact`) `/review` for PR #<PR>. Vendor identifie
 
 ## Execution
 
-1. Read PR state (`gh pr view`, `gh pr diff`, `gh pr view --comments`, `gh pr checks`).
+1. Read PR state (`gh pr view`, `gh pr diff`, `gh pr view --comments`, `gh pr checks`), including the full list of existing markers on the current HEAD.
 2. Compute R counter: count prior `REVIEW_FINDINGS_codex-cli_R*` markers on this PR; next R = count + 1.
 3. Spawn three concurrent subtasks (or sequential), one per lane (CQ, SP, TC) per `roles/reviewer.md`.
-4. Aggregate findings.
+4. Aggregate findings into per-lane counts and all-lane P0/P1/P2/P3 totals.
 5. If local CI did not run on this HEAD, run gates locally.
-6. Emit the marker:
+6. Emit the marker. The marker first line MUST include P0/P1/P2/P3 totals immediately after the marker title; do not put a bare marker title on the first line:
 
    **If 0 P0/P1/P2 AND all gates PASS:**
 
    ```
-   REVIEW_CLEAN_codex-cli_<short-sha>
+   REVIEW_CLEAN_codex-cli_<short-sha> P0=0 P1=0 P2=0 P3=<total-p3>
 
    Vendor: codex-cli
    HEAD reviewed: <full SHA>
+   Existing markers on HEAD:
+     - <prior marker title on this HEAD>  (posted <ISO timestamp>)
+     - ...
+     (Use "none" if no prior markers.)
    Per-lane findings:
      CQ: P0=0 P1=0 P2=0 P3=<w> Nit=<nit>
      SP: P0=0 P1=0 P2=0 P3=<w> Nit=<nit>
@@ -41,11 +45,15 @@ You are executing PACT (`fastxyz/pact`) `/review` for PR #<PR>. Vendor identifie
    **Else:**
 
    ```
-   REVIEW_FINDINGS_codex-cli_R<N>_<short-sha>
+   REVIEW_FINDINGS_codex-cli_R<N>_<short-sha> P0=<total-p0> P1=<total-p1> P2=<total-p2> P3=<total-p3>
 
    Vendor: codex-cli
    Round: <N>
    HEAD reviewed: <full SHA>
+   Existing markers on HEAD:
+     - <prior marker title on this HEAD>  (posted <ISO timestamp>)
+     - ...
+     (Use "none" if no prior markers.)
    Per-lane counts:
      CQ: P0=<x> P1=<y> P2=<z> P3=<w> Nit=<nit>
      SP: P0=<x> P1=<y> P2=<z> P3=<w> Nit=<nit>

@@ -61,11 +61,13 @@ The author switches to Window B and types `/review 500`. Claude Code:
 7. Posts marker:
 
 ```
-REVIEW_FINDINGS_claude-code_R1_c9f2e55
+REVIEW_FINDINGS_claude-code_R1_c9f2e55 P0=0 P1=1 P2=1 P3=0
 
 Vendor: claude-code
 Round (this vendor's nth findings post on this PR): 1
 HEAD reviewed: c9f2e55a1b2c3d4e5f6789abcdef0123456789ab
+Existing markers on HEAD:
+  - LOOP_DONE_codex-cli_c9f2e55  (posted 2026-05-25T12:00:00Z)
 Per-lane counts:
   CQ: P0=0 P1=0 P2=0 P3=0 Nit=0
   SP: P0=0 P1=1 P2=0 P3=0 Nit=0
@@ -111,10 +113,12 @@ Commits pushed this loop: d0a1b22
 Claude Code reviews HEAD `d0a1b22`. All three lanes clean. Posts:
 
 ```
-REVIEW_CLEAN_claude-code_d0a1b22
+REVIEW_CLEAN_claude-code_d0a1b22 P0=0 P1=0 P2=0 P3=1
 
 Vendor: claude-code
 HEAD reviewed: d0a1b22a1b2c3d4e5f6789abcdef0123456789ab
+Existing markers on HEAD:
+  - LOOP_DONE_codex-cli_d0a1b22  (posted 2026-05-25T12:10:00Z)
 Per-lane findings:
   CQ: P0=0 P1=0 P2=0 P3=1 Nit=0
   SP: P0=0 P1=0 P2=0 P3=0 Nit=0

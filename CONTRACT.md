@@ -86,7 +86,7 @@ Commits pushed this loop: <list of SHAs>
 **REVIEW_CLEAN** — posted by `/review` when the running vendor's external review finds zero P0/P1/P2:
 
 ```
-REVIEW_CLEAN_<vendor>_<sha>
+REVIEW_CLEAN_<vendor>_<sha> P0=0 P1=0 P2=0 P3=<total-p3>
 
 Vendor: <vendor name>
 HEAD reviewed: <full commit SHA>
@@ -111,7 +111,7 @@ The `Existing markers on HEAD` field is REQUIRED. Its purpose is to force the re
 **REVIEW_FINDINGS** — posted by `/review` when the running vendor's external review finds at least one P0/P1/P2:
 
 ```
-REVIEW_FINDINGS_<vendor>_R<N>_<sha>
+REVIEW_FINDINGS_<vendor>_R<N>_<sha> P0=<total-p0> P1=<total-p1> P2=<total-p2> P3=<total-p3>
 
 Vendor: <vendor name>
 Round (this vendor's nth findings post on this PR): <N>
@@ -134,6 +134,8 @@ CI status: <green|red|not fired>
 ```
 
 The `Existing markers on HEAD` field is REQUIRED on both `REVIEW_CLEAN` and `REVIEW_FINDINGS`. See the `REVIEW_CLEAN` schema note above for rationale: it forces the reviewer to enumerate prior markers as a precondition for posting, which both enables the round-zero check (`commands/review.md` step 3) and prevents stale "needs another vendor" closing lines when the gate is already satisfied. A non-trivial `REVIEW_FINDINGS` whose body shows a different vendor already posted a clean marker on the same HEAD is a contract-aware signal that something materially new must have changed (e.g., a regression the prior vendor missed) — surface that in the findings, don't bury it.
+
+**Review marker first-line counts:** every `REVIEW_CLEAN` and `REVIEW_FINDINGS` marker MUST put the aggregate P0/P1/P2/P3 counts on the first line, immediately after the marker title. These totals are summed across CQ, SP, and TC lane counts and MUST match the detailed per-lane section in the body. `REVIEW_CLEAN` therefore always has `P0=0 P1=0 P2=0`, while `P3` may be non-zero for advisory findings. This first-line count is mandatory so a human scanning PR comments can see the review severity summary without reading the whole marker.
 
 **Round-counter rules:** `R<N>` appears only on `REVIEW_FINDINGS`. Each vendor maintains its own R counter, incrementing only when that vendor posts a new `REVIEW_FINDINGS`. `CODE_DONE`, `LOOP_DONE`, and `REVIEW_CLEAN` do not carry R counters (they are terminal verdicts for that invocation, or in `CODE_DONE`'s case, a "your turn" signal).
 

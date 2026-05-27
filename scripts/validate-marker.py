@@ -43,7 +43,7 @@ def validate_marker(text: str) -> ValidationResult:
     # Parse title line
     title = lines[0]
     m = re.match(
-        r"^(CODE_DONE|LOOP_DONE|REVIEW_CLEAN|REVIEW_FINDINGS)_([a-z0-9][a-z0-9-]*)(?:_R(\d+))?_([0-9a-f]{7,40})$",
+        r"^(CODE_DONE|LOOP_DONE|REVIEW_CLEAN|REVIEW_FINDINGS)_([a-z0-9][a-z0-9-]*)(?:_R(\d+))?_([0-9a-f]{7,40})(?: P0=(\d+) P1=(\d+) P2=(\d+) P3=(\d+))?$",
         title,
     )
     if not m:
@@ -54,6 +54,16 @@ def validate_marker(text: str) -> ValidationResult:
     result.vendor = m.group(2)
     round_str = m.group(3)
     result.head_short = m.group(4)
+    first_line_counts = None
+    if m.group(5) is not None:
+        first_line_counts = tuple(int(m.group(i)) for i in range(5, 9))
+
+    if result.kind in ("REVIEW_CLEAN", "REVIEW_FINDINGS") and first_line_counts is None:
+        result.ok = False
+        result.errors.append(f"{result.kind} title line must include aggregate P0/P1/P2/P3 counts")
+    if result.kind not in ("REVIEW_CLEAN", "REVIEW_FINDINGS") and first_line_counts is not None:
+        result.ok = False
+        result.errors.append(f"{result.kind} title line must not include review severity counts")
 
     if result.kind == "REVIEW_FINDINGS" and round_str is None:
         result.ok = False
@@ -109,18 +119,33 @@ def validate_marker(text: str) -> ValidationResult:
                 result.ok = False
                 result.errors.append("Internal rounds taken is not an integer")
 
-    if result.kind == "REVIEW_CLEAN":
-        # Verify per-lane counts all have P0=P1=P2=0
+    if result.kind in ("REVIEW_CLEAN", "REVIEW_FINDINGS"):
         lane_rx = re.compile(r"^\s+(CQ|SP|TC): P0=(\d+) P1=(\d+) P2=(\d+) P3=(\d+) Nit=(\d+)$")
+        lane_totals = [0, 0, 0, 0]
+        lane_rows = 0
         for ln in body:
             m3 = lane_rx.match(ln)
-            if m3:
-                p0, p1, p2 = int(m3.group(2)), int(m3.group(3)), int(m3.group(4))
-                if p0 or p1 or p2:
-                    result.ok = False
-                    result.errors.append(
-                        f"REVIEW_CLEAN lane {m3.group(1)} has P0/P1/P2 non-zero (P0={p0} P1={p1} P2={p2}); use REVIEW_FINDINGS instead"
-                    )
+            if not m3:
+                continue
+            lane_rows += 1
+            p0, p1, p2, p3 = (int(m3.group(i)) for i in range(2, 6))
+            lane_totals[0] += p0
+            lane_totals[1] += p1
+            lane_totals[2] += p2
+            lane_totals[3] += p3
+            if result.kind == "REVIEW_CLEAN" and (p0 or p1 or p2):
+                result.ok = False
+                result.errors.append(
+                    f"REVIEW_CLEAN lane {m3.group(1)} has P0/P1/P2 non-zero (P0={p0} P1={p1} P2={p2}); use REVIEW_FINDINGS instead"
+                )
+        if lane_rows != len(LANES):
+            result.ok = False
+            result.errors.append(f"{result.kind} must include one per-lane count row for each of CQ, SP, and TC")
+        if first_line_counts is not None and tuple(lane_totals) != first_line_counts:
+            result.ok = False
+            result.errors.append(
+                f"{result.kind} first-line counts P0/P1/P2/P3={first_line_counts} do not match per-lane totals {tuple(lane_totals)}"
+            )
 
     # v1.0.5: REVIEW markers MUST enumerate existing markers on the current
     # HEAD. The field forces the reviewer to read the PR state before posting,
