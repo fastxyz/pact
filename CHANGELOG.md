@@ -4,7 +4,7 @@
 
 ### Schema clarification
 
-- `REVIEW_CLEAN` and `REVIEW_FINDINGS` first lines now must include aggregate P0/P1/P2/P3 totals immediately after the marker title. The validator rejects review markers that omit these first-line counts or whose first-line totals disagree with the per-lane counts. This is intended to make severity visible at a glance in PR comments, especially for Codex-style review summaries.
+- `REVIEW_CLEAN` and `REVIEW_FINDINGS` first lines now must include aggregate P0/P1/P2/P3 totals followed by CQ/SP/TC per-category P0/P1/P2/P3 counts immediately after the marker title. The validator rejects review markers that omit these first-line counts or whose aggregate or per-category totals disagree with the per-lane counts. This is intended to make severity visible at a glance in PR comments, especially for Codex-style review summaries.
 
 ## v1.0.6 — 2026-05-26
 

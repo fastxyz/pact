@@ -61,7 +61,7 @@ The author switches to Window B and types `/review 500`. Claude Code:
 7. Posts marker:
 
 ```
-REVIEW_FINDINGS_claude-code_R1_c9f2e55 P0=0 P1=1 P2=1 P3=0
+REVIEW_FINDINGS_claude-code_R1_c9f2e55 TOTAL P0=0 P1=1 P2=1 P3=0 | CQ P0=0 P1=0 P2=0 P3=0 | SP P0=0 P1=1 P2=0 P3=0 | TC P0=0 P1=0 P2=1 P3=0
 
 Vendor: claude-code
 Round (this vendor's nth findings post on this PR): 1
@@ -113,7 +113,7 @@ Commits pushed this loop: d0a1b22
 Claude Code reviews HEAD `d0a1b22`. All three lanes clean. Posts:
 
 ```
-REVIEW_CLEAN_claude-code_d0a1b22 P0=0 P1=0 P2=0 P3=1
+REVIEW_CLEAN_claude-code_d0a1b22 TOTAL P0=0 P1=0 P2=0 P3=1 | CQ P0=0 P1=0 P2=0 P3=1 | SP P0=0 P1=0 P2=0 P3=0 | TC P0=0 P1=0 P2=0 P3=0
 
 Vendor: claude-code
 HEAD reviewed: d0a1b22a1b2c3d4e5f6789abcdef0123456789ab

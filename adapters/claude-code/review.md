@@ -21,14 +21,14 @@ You are running the PACT `/review` command (see `commands/review.md`). Vendor id
    - CQ: `subagent_type="Explore"`, prompt = "Review the diff of PR <N> HEAD <sha> on lane CQ per fastxyz/pact roles/reviewer.md. Report findings as `[CQ <sev>] <file:line> — <summary>` and per-severity counts. No code changes."
    - SP: similar with lane=SP and the linked spec from the PR description
    - TC: similar with lane=TC, allowed to run gates locally
-4. Aggregate findings into per-lane counts and all-lane P0/P1/P2/P3 totals.
+4. Aggregate findings into CQ/SP/TC per-category counts and all-lane P0/P1/P2/P3 totals.
 5. If local CI did not run, run gates via `Bash` (`npm run typecheck && npm run lint && npm test` or the project's equivalent).
-6. Emit the marker. The marker first line MUST include P0/P1/P2/P3 totals immediately after the marker title; do not put a bare marker title on the first line:
+6. Emit the marker. The marker first line MUST include aggregate P0/P1/P2/P3 totals, then CQ/SP/TC per-category P0/P1/P2/P3 counts, immediately after the marker title; do not put a bare marker title on the first line:
 
    **If 0 P0/P1/P2 AND all gates PASS:**
 
    ```
-   REVIEW_CLEAN_claude-code_<short-sha> P0=0 P1=0 P2=0 P3=<total-p3>
+   REVIEW_CLEAN_claude-code_<short-sha> TOTAL P0=0 P1=0 P2=0 P3=<total-p3> | CQ P0=0 P1=0 P2=0 P3=<cq-p3> | SP P0=0 P1=0 P2=0 P3=<sp-p3> | TC P0=0 P1=0 P2=0 P3=<tc-p3>
 
    Vendor: claude-code
    HEAD reviewed: <full SHA>
@@ -49,7 +49,7 @@ You are running the PACT `/review` command (see `commands/review.md`). Vendor id
    **Else:**
 
    ```
-   REVIEW_FINDINGS_claude-code_R<N>_<short-sha> P0=<total-p0> P1=<total-p1> P2=<total-p2> P3=<total-p3>
+   REVIEW_FINDINGS_claude-code_R<N>_<short-sha> TOTAL P0=<total-p0> P1=<total-p1> P2=<total-p2> P3=<total-p3> | CQ P0=<cq-p0> P1=<cq-p1> P2=<cq-p2> P3=<cq-p3> | SP P0=<sp-p0> P1=<sp-p1> P2=<sp-p2> P3=<sp-p3> | TC P0=<tc-p0> P1=<tc-p1> P2=<tc-p2> P3=<tc-p3>
 
    Vendor: claude-code
    Round (this vendor's nth findings post on this PR): <N>
