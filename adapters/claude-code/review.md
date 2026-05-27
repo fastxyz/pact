@@ -9,21 +9,22 @@ You are running the PACT `/review` command (see `commands/review.md`). Vendor id
 
 ## Required reading
 
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.0/CONTRACT.md`
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.0/roles/reviewer.md`
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.0/commands/review.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/CONTRACT.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/roles/reviewer.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/commands/review.md`
 
 ## Execution
 
 1. Read PR state (same as `/code` step 1), including the full list of existing markers on the current HEAD.
-2. Compute this vendor's R counter: count prior `REVIEW_FINDINGS_claude-code_R*` markers; next R = count + 1.
-3. Dispatch three parallel lane sub-agents via the `Agent` tool:
+2. Apply the same-HEAD duplicate guard from `commands/review.md` step 3. If it fires, the first paragraph MUST start `TOTAL P0=0 P1=0 P2=0 P3=<prior-total-p3>. P0/P1/P2 are zero;` and no marker is posted.
+3. Compute this vendor's R counter: count prior `REVIEW_FINDINGS_claude-code_R*` markers; next R = count + 1.
+4. Dispatch three parallel lane sub-agents via the `Agent` tool:
    - CQ: `subagent_type="Explore"`, prompt = "Review the diff of PR <N> HEAD <sha> on lane CQ per fastxyz/pact roles/reviewer.md. Report findings as `[CQ <sev>] <file:line> — <summary>` and per-severity counts. No code changes."
    - SP: similar with lane=SP and the linked spec from the PR description
    - TC: similar with lane=TC, allowed to run gates locally
-4. Aggregate findings into CQ/SP/TC per-category counts and all-lane P0/P1/P2/P3 totals.
-5. If local CI did not run, run gates via `Bash` (`npm run typecheck && npm run lint && npm test` or the project's equivalent).
-6. Emit the marker. The marker first line MUST include aggregate P0/P1/P2/P3 totals, then CQ/SP/TC per-category P0/P1/P2/P3 counts, immediately after the marker title; do not put a bare marker title on the first line:
+5. Aggregate findings into CQ/SP/TC per-category counts and all-lane P0/P1/P2/P3 totals.
+6. If local CI did not run, run gates via `Bash` (`npm run typecheck && npm run lint && npm test` or the project's equivalent).
+7. Emit the marker. The marker first line MUST include aggregate P0/P1/P2/P3 totals, then CQ/SP/TC per-category P0/P1/P2/P3 counts, immediately after the marker title; do not put a bare marker title on the first line:
 
    **If 0 P0/P1/P2 AND all gates PASS:**
 
@@ -70,9 +71,8 @@ You are running the PACT `/review` command (see `commands/review.md`). Vendor id
    ```
 
    Post via `Bash`.
-
-7. If this is the 5th `REVIEW_FINDINGS_claude-code_R*` marker on this PR, also print the escalation notice (CONTRACT §8 trigger 1): "Per-vendor R counter for claude-code has hit 5 on this PR. Escalating to user per CONTRACT §8."
-
-8. Print to user:
-   - If CLEAN: "Merge gate needs the other vendor's clean marker on HEAD `<short-sha>`."
-   - If FINDINGS: "Findings posted. Run `/code` or `/loop <PR>` in the coder vendor's CLI to address them."
+8. If this is the 5th `REVIEW_FINDINGS_claude-code_R*` marker on this PR, also print the escalation notice (CONTRACT §8 trigger 1): "Per-vendor R counter for claude-code has hit 5 on this PR. Escalating to user per CONTRACT §8."
+9. Print to user, deriving the state from `Existing markers on HEAD` plus the marker just posted. The first paragraph MUST start with the aggregate counts:
+   - If CLEAN and a different-vendor clean marker already exists on this HEAD: "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate satisfied on HEAD `<short-sha>` (this vendor + prior `<other-vendor>` clean marker). Human authorization required to merge."
+   - If CLEAN and no different-vendor clean marker exists yet: "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate needs the other vendor's clean marker on HEAD `<short-sha>`."
+   - If FINDINGS: "TOTAL P0=<total-p0> P1=<total-p1> P2=<total-p2> P3=<total-p3>. P0/P1/P2 blockers remain; findings posted. Run `/code` or `/loop <PR>` in the coder vendor's CLI to address them."

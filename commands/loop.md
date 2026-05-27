@@ -33,26 +33,27 @@ The adapter is responsible for parsing both orders.
 
 6. **Internal loop** (track internal round count `n`, starting at 1):
    a. **Round-start user status.** Before coding, print the human-facing blocker count for this round, not implementation trivia:
-      `Round <n> starting: remaining blockers TOTAL P0=<a> P1=<b> P2=<c> | CQ P0=<a> P1=<b> P2=<c> | SP P0=<a> P1=<b> P2=<c> | TC P0=<a> P1=<b> P2=<c>.`
-      For round 1, these counts come from the ingested unresolved findings (or `0/0/0` if this is initial implementation). For later rounds, they come from the prior self-review.
+      `TOTAL P0=<a> P1=<b> P2=<c> P3=<d>. Round <n> starting: remaining review counts | CQ P0=<cq-p0> P1=<cq-p1> P2=<cq-p2> P3=<cq-p3> | SP P0=<sp-p0> P1=<sp-p1> P2=<sp-p2> P3=<sp-p3> | TC P0=<tc-p0> P1=<tc-p1> P2=<tc-p2> P3=<tc-p3>.`
+      For round 1, these counts come from the ingested unresolved findings (or `0/0/0/0` if this is initial implementation). For later rounds, they come from the prior self-review.
    b. **Coder phase** (per `roles/coder.md`): implement code, run gates, push. The Coder is bounded: address open findings (cross-vendor `REVIEW_FINDINGS` or same-vendor self-review findings from step 6c's previous iteration) OR implement the initial spec on R1. Never push speculative changes.
    c. **Self-review phase** (per `roles/reviewer.md`): run the three lanes on the new HEAD
    d. **Round-finished user status.** Immediately after aggregating self-review, print:
-      `Round <n> finished: remaining blockers TOTAL P0=<a> P1=<b> P2=<c> | CQ P0=<a> P1=<b> P2=<c> | SP P0=<a> P1=<b> P2=<c> | TC P0=<a> P1=<b> P2=<c>.`
-      Follow with one sentence: either `No P0/P1/P2 remain; preparing LOOP_DONE.` or `Another round is needed; next round will address these blockers.`
+      `TOTAL P0=<a> P1=<b> P2=<c> P3=<d>. Round <n> finished: remaining review counts | CQ P0=<cq-p0> P1=<cq-p1> P2=<cq-p2> P3=<cq-p3> | SP P0=<sp-p0> P1=<sp-p1> P2=<sp-p2> P3=<sp-p3> | TC P0=<tc-p0> P1=<tc-p1> P2=<tc-p2> P3=<tc-p3>.`
+      Follow with one sentence: either `P0/P1/P2 are zero; preparing LOOP_DONE.` or `P0/P1/P2 blockers remain; another round is needed.`
    e. If 0 P0/P1/P2 AND gates green: exit the internal loop successfully → go to step 7
-   f. If `n >= N` (cap exhausted): halt per CONTRACT §8 trigger 5; do NOT post `LOOP_DONE`; print halt reason to user; exit
+   f. If `n >= N` (cap exhausted): halt per CONTRACT §8 trigger 5; do NOT post `LOOP_DONE`; print `TOTAL P0=<a> P1=<b> P2=<c> P3=<d>. P0/P1/P2 blockers remain; loop cap N=<N> exhausted at HEAD <sha>.` before any other halt detail; exit
    g. Else: increment `n`; go to (a), addressing the self-review's findings
-7. Post `LOOP_DONE_<vendor>_<sha>` per CONTRACT §5.5 format:
+7. Post `LOOP_DONE_<vendor>_<sha> TOTAL P0=0 P1=0 P2=0 P3=<total-p3> | ...` per CONTRACT §5.5 format:
+   - First line must include aggregate and per-lane P0/P1/P2/P3 totals.
    - Body must include: Vendor, HEAD, Internal rounds taken (the final value of `n`, or `0` if the round-zero check skipped the Coder phase), Final internal review per-lane counts, Gates, CI, Commits pushed this loop (empty list if round-zero exit).
-8. Print to the user: "Merge gate (CONTRACT §7) needs a clean marker from a different vendor on HEAD `<sha>`. Switch to another vendor's CLI and run `/review <PR>` (or `/loop <PR>`)."
+8. Print to the user: "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate (CONTRACT §7) needs a clean marker from a different vendor on HEAD `<sha>`. Switch to another vendor's CLI and run `/review <PR>` (or `/loop <PR>`)."
 
-   If the round-zero check fired (Internal rounds taken: 0), this `/loop` invocation has effectively cross-verified the existing HEAD. If a different vendor already has a clean marker on the same HEAD, the merge gate is now satisfied — print "Merge gate satisfied on HEAD `<sha>` (this vendor + prior `<other-vendor>` clean marker). Human authorization required to merge." instead.
+   If the round-zero check fired (Internal rounds taken: 0), this `/loop` invocation has effectively cross-verified the existing HEAD. If a different vendor already has a clean marker on the same HEAD, the merge gate is now satisfied — print "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate satisfied on HEAD `<sha>` (this vendor + prior `<other-vendor>` clean marker). Human authorization required to merge." instead.
 
 ## Edge cases
 
 - **N = 1:** equivalent to a stricter `/code` (one push followed by one self-review; if findings, halt). Useful when you want a single attempt + verdict.
-- **Cap-exhausted halt:** the latest pushed commits remain on the PR. No `LOOP_DONE` marker is posted. The user can switch vendors and run `/review` to see what's blocking, or run `/code` to land a manual fix.
+- **Cap-exhausted halt:** the first paragraph MUST start with `TOTAL P0=<a> P1=<b> P2=<c> P3=<d>.` and state that blockers remain before explaining the cap. The latest pushed commits remain on the PR. No `LOOP_DONE` marker is posted. The user can switch vendors and run `/review` to see what's blocking, or run `/code` to land a manual fix.
 - **External findings arrive mid-loop:** the loop reads markers only at step 3 (before entering). If a cross-vendor review posts during the loop, it's picked up on the next `/loop` invocation, not mid-run.
 - **Internal Reviewer finds zero issues on round 1:** loop exits with `Internal rounds taken: 1`. That's the ideal case for a /loop that addressed at least one finding.
 - **Round-zero exit (nothing to address):** when step 5's round-zero check fires, the loop posts `LOOP_DONE` with `Internal rounds taken: 0` and pushes no commits. This is the correct outcome when a different vendor has already posted a clean marker on the existing HEAD AND this vendor's self-review also finds it clean — the second vendor's confirmation is genuinely cross-checking, not redoing work.
