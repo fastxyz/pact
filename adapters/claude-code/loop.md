@@ -28,12 +28,14 @@ Parsing rule: any bare positive integer ≤ 999999 = PR number. Any `[X]` with X
 2. Set `n = 0` (internal round counter).
 3. Enter the internal loop:
    - `n += 1`
+   - Print round-start status for the user before coding: `Round <n> starting: remaining blockers TOTAL P0=<a> P1=<b> P2=<c> | CQ P0=<a> P1=<b> P2=<c> | SP P0=<a> P1=<b> P2=<c> | TC P0=<a> P1=<b> P2=<c>.` Round 1 uses ingested unresolved findings, later rounds use the prior self-review.
    - **Coder phase:** implement / fix per `roles/coder.md`. Run gates. If gates fail, halt the loop and report (do NOT post `LOOP_DONE`); user takes over manually. If gates pass, push the commits.
    - **Self-review phase:** dispatch three parallel lane sub-agents via the `Agent` tool:
      - CQ subagent: `subagent_type="Explore"`, prompt = "Review the diff of PR <N> HEAD <sha> on lane CQ per fastxyz/pact roles/reviewer.md. Report findings as `[CQ <sev>] <file:line> — <summary>` + per-severity counts. No code changes."
      - SP subagent: similar with lane=SP and access to the linked spec
      - TC subagent: similar with lane=TC, allowed to run gates locally
    - Aggregate the three subagent reports. Compute per-lane per-severity totals.
+   - Print round-finished status immediately after review aggregation: `Round <n> finished: remaining blockers TOTAL P0=<a> P1=<b> P2=<c> | CQ P0=<a> P1=<b> P2=<c> | SP P0=<a> P1=<b> P2=<c> | TC P0=<a> P1=<b> P2=<c>.` Then say either `No P0/P1/P2 remain; preparing LOOP_DONE.` or `Another round is needed; next round will address these blockers.`
    - If 0 P0/P1/P2 AND gates green: exit the loop → go to step 4.
    - If `n >= N`: halt per CONTRACT §8 trigger 5. Do NOT post `LOOP_DONE`. Print: "Loop cap N=<N> exhausted at HEAD `<short-sha>`. Findings remain: P0=<a> P1=<b> P2=<c>. The latest pushes are on the PR. Switch vendors and run `/review` or run `/code` to attempt a manual fix."
    - Else: feed the self-review findings back into the Coder phase; continue.

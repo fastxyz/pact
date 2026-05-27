@@ -5,6 +5,7 @@
 ### Schema clarification
 
 - `REVIEW_CLEAN` and `REVIEW_FINDINGS` first lines now must include aggregate P0/P1/P2/P3 totals followed by CQ/SP/TC per-category P0/P1/P2/P3 counts immediately after the marker title. The validator rejects review markers that omit these first-line counts or whose aggregate or per-category totals disagree with the per-lane counts. This is intended to make severity visible at a glance in PR comments, especially for Codex-style review summaries.
+- `/loop` now must print user-facing P0/P1/P2 blocker statistics at the start and finish of every internal round, with aggregate counts first and CQ/SP/TC per-category counts second. This keeps loop progress centered on the user's goal: clearing P0/P1/P2 blockers, not narrating commits or low-level execution details.
 
 ## v1.0.6 — 2026-05-26
 

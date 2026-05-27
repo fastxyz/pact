@@ -23,12 +23,14 @@ Same as `/code` plus:
 3. Set internal round counter `n = 0`.
 4. Enter the internal loop:
    - `n += 1`
+   - Print round-start status for the user before coding: `Round <n> starting: remaining blockers TOTAL P0=<a> P1=<b> P2=<c> | CQ P0=<a> P1=<b> P2=<c> | SP P0=<a> P1=<b> P2=<c> | TC P0=<a> P1=<b> P2=<c>.` Round 1 uses ingested unresolved findings, later rounds use the prior self-review.
    - **Coder phase:** implement per `roles/coder.md`. Run gates. If gates fail, HALT (do not post `LOOP_DONE`). If gates pass, push.
    - **Self-review phase:** spawn three concurrent subtasks (or run sequentially if your Codex version lacks concurrency), one per lane:
      - CQ subtask: "Review PR <PR> HEAD <sha> diff on lane CQ per fastxyz/pact roles/reviewer.md. Report `[CQ <sev>] <file:line> — <summary>` + per-severity counts. No code changes."
      - SP subtask: similar with lane SP, including the spec from PR description
      - TC subtask: similar with lane TC, may run local gates
-   - Aggregate. If 0 P0/P1/P2 AND gates green: exit loop → go to step 5.
+   - Aggregate. Print round-finished status immediately after review aggregation: `Round <n> finished: remaining blockers TOTAL P0=<a> P1=<b> P2=<c> | CQ P0=<a> P1=<b> P2=<c> | SP P0=<a> P1=<b> P2=<c> | TC P0=<a> P1=<b> P2=<c>.` Then say either `No P0/P1/P2 remain; preparing LOOP_DONE.` or `Another round is needed; next round will address these blockers.`
+   - If 0 P0/P1/P2 AND gates green: exit loop → go to step 5.
    - If `n >= <N>`: HALT per CONTRACT §8 trigger 5. Do NOT post `LOOP_DONE`. Print: "Loop cap N=<N> exhausted at HEAD `<short-sha>`. Findings remain: P0=<a> P1=<b> P2=<c>."
    - Else: feed self-review findings back into Coder phase; continue.
 

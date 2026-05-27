@@ -32,11 +32,17 @@ The adapter is responsible for parsing both orders.
    - If the Self-review finds findings the prior vendor missed → the Coder phase NOW has legitimate work; continue to step 6 normally.
 
 6. **Internal loop** (track internal round count `n`, starting at 1):
-   a. **Coder phase** (per `roles/coder.md`): implement code, run gates, push. The Coder is bounded: address open findings (cross-vendor `REVIEW_FINDINGS` or same-vendor self-review findings from step 6b's previous iteration) OR implement the initial spec on R1. Never push speculative changes.
-   b. **Self-review phase** (per `roles/reviewer.md`): run the three lanes on the new HEAD
-   c. If 0 P0/P1/P2 AND gates green: exit the internal loop successfully → go to step 7
-   d. If `n >= N` (cap exhausted): halt per CONTRACT §8 trigger 5; do NOT post `LOOP_DONE`; print halt reason to user; exit
-   e. Else: increment `n`; go to (a), addressing the self-review's findings
+   a. **Round-start user status.** Before coding, print the human-facing blocker count for this round, not implementation trivia:
+      `Round <n> starting: remaining blockers TOTAL P0=<a> P1=<b> P2=<c> | CQ P0=<a> P1=<b> P2=<c> | SP P0=<a> P1=<b> P2=<c> | TC P0=<a> P1=<b> P2=<c>.`
+      For round 1, these counts come from the ingested unresolved findings (or `0/0/0` if this is initial implementation). For later rounds, they come from the prior self-review.
+   b. **Coder phase** (per `roles/coder.md`): implement code, run gates, push. The Coder is bounded: address open findings (cross-vendor `REVIEW_FINDINGS` or same-vendor self-review findings from step 6c's previous iteration) OR implement the initial spec on R1. Never push speculative changes.
+   c. **Self-review phase** (per `roles/reviewer.md`): run the three lanes on the new HEAD
+   d. **Round-finished user status.** Immediately after aggregating self-review, print:
+      `Round <n> finished: remaining blockers TOTAL P0=<a> P1=<b> P2=<c> | CQ P0=<a> P1=<b> P2=<c> | SP P0=<a> P1=<b> P2=<c> | TC P0=<a> P1=<b> P2=<c>.`
+      Follow with one sentence: either `No P0/P1/P2 remain; preparing LOOP_DONE.` or `Another round is needed; next round will address these blockers.`
+   e. If 0 P0/P1/P2 AND gates green: exit the internal loop successfully → go to step 7
+   f. If `n >= N` (cap exhausted): halt per CONTRACT §8 trigger 5; do NOT post `LOOP_DONE`; print halt reason to user; exit
+   g. Else: increment `n`; go to (a), addressing the self-review's findings
 7. Post `LOOP_DONE_<vendor>_<sha>` per CONTRACT §5.5 format:
    - Body must include: Vendor, HEAD, Internal rounds taken (the final value of `n`, or `0` if the round-zero check skipped the Coder phase), Final internal review per-lane counts, Gates, CI, Commits pushed this loop (empty list if round-zero exit).
 8. Print to the user: "Merge gate (CONTRACT §7) needs a clean marker from a different vendor on HEAD `<sha>`. Switch to another vendor's CLI and run `/review <PR>` (or `/loop <PR>`)."
