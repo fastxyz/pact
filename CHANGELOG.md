@@ -1,11 +1,12 @@
 # Changelog
 
-## Unreleased
+## v1.0.7 — 2026-05-27
 
-### Schema clarification
+### Schema + UX clarification
 
-- `REVIEW_CLEAN` and `REVIEW_FINDINGS` first lines now must include aggregate P0/P1/P2/P3 totals followed by CQ/SP/TC per-category P0/P1/P2/P3 counts immediately after the marker title. The validator rejects review markers that omit these first-line counts or whose aggregate or per-category totals disagree with the per-lane counts. This is intended to make severity visible at a glance in PR comments, especially for Codex-style review summaries.
-- `/loop` now must print user-facing P0/P1/P2 blocker statistics at the start and finish of every internal round, with aggregate counts first and CQ/SP/TC per-category counts second. This keeps loop progress centered on the user's goal: clearing P0/P1/P2 blockers, not narrating commits or low-level execution details.
+- `LOOP_DONE`, `REVIEW_CLEAN`, and `REVIEW_FINDINGS` first lines now must include aggregate P0/P1/P2/P3 totals followed by CQ/SP/TC per-category P0/P1/P2/P3 counts immediately after the marker title. The validator rejects markers that omit these first-line counts or whose aggregate or per-category totals disagree with the per-lane counts. This is intended to make severity visible at a glance in PR comments, especially for Codex-style review summaries.
+- Every `/review` result, `/loop` round status, cap-exhausted halt, duplicate-guard exit, and final user response after a review/loop marker now must start its first paragraph with `TOTAL P0=<n> P1=<n> P2=<n> P3=<n>.` When P0/P1/P2 are zero, it must explicitly say `P0/P1/P2 are zero` before merge-gate or next-action text.
+- `/loop` now must print user-facing P0/P1/P2/P3 statistics at the start and finish of every internal round, with aggregate counts first and CQ/SP/TC per-category counts second. This keeps loop progress centered on the user's goal: understanding whether P0/P1/P2 blockers remain, not narrating commits or low-level execution details.
 
 ## v1.0.6 — 2026-05-26
 
@@ -37,7 +38,7 @@ No changes to marker schemas, lane structure, severities, escalation triggers, o
 
 - **`commands/review.md`** — add a "round-zero check" step (new step 3, between "read PR state" and "compute R counter") that mirrors `/loop`'s round-zero check from v1.0.3. If a different-vendor `REVIEW_CLEAN_*` or `LOOP_DONE_*` exists on the current HEAD AND no unresolved `REVIEW_FINDINGS_*` exist anywhere on the PR, the merge gate is already satisfied — print "Merge gate satisfied on HEAD `<sha>`" and EXIT. Do not run the lanes, do not run local gates, do not post a marker. Force-override available via `/review <PR> --cross-verify` when the user has a substantive reason to triple-check.
 - **`commands/review.md`** — closing line MUST be derived from the marker body's `Existing markers on HEAD` field, never from a template. Three cases enumerated (this clean + prior clean = gate satisfied; this clean alone = needs other vendor; findings = run /code or /loop).
-- **`CONTRACT.md`** — add the required `Existing markers on HEAD <sha>:` field to both `REVIEW_CLEAN` and `REVIEW_FINDINGS` marker schemas. The field enumerates every prior marker on the current HEAD (with ISO timestamps). The reviewer cannot post a marker without producing this list, which forces the round-zero check to be observed in practice even if the agent skipped step 3.
+- **`CONTRACT.md`** — add the required `Existing markers on HEAD:` field to both `REVIEW_CLEAN` and `REVIEW_FINDINGS` marker schemas. The field enumerates every prior marker on the current HEAD (with ISO timestamps). The reviewer cannot post a marker without producing this list, which forces the round-zero check to be observed in practice even if the agent skipped step 3.
 
 The two changes are intentionally redundant — they catch the same failure at different layers. The round-zero check prevents the redundant marker in the common case. The required schema field catches the residual case where the agent forgets the round-zero check too: it cannot fill out the marker body without enumerating prior markers, which surfaces the duplicate before posting.
 

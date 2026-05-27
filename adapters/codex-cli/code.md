@@ -10,9 +10,9 @@ You are executing PACT (`fastxyz/pact`) `/code` for PR #<PR>. Vendor identifier 
 
 Fetch and read these documents in order:
 
-1. `https://raw.githubusercontent.com/fastxyz/pact/v1.0.0/CONTRACT.md` — read §1, §3, §4, §5, §8 carefully
-2. `https://raw.githubusercontent.com/fastxyz/pact/v1.0.0/roles/coder.md`
-3. `https://raw.githubusercontent.com/fastxyz/pact/v1.0.0/commands/code.md`
+1. `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/CONTRACT.md` — read §1, §3, §4, §5, §8 carefully
+2. `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/roles/coder.md`
+3. `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/commands/code.md`
 4. The current project's `AGENTS.md` and `CLAUDE.md` from the local repo
 
 Fetch with `curl -sL <url>` if URL access is allowed; otherwise note that the user can paste the contents.

@@ -213,7 +213,7 @@ CI status: green
 
 class TestLoopDone(unittest.TestCase):
     def test_minimal_valid(self):
-        text = """LOOP_DONE_codex-cli_aef9999
+        text = """LOOP_DONE_codex-cli_aef9999 TOTAL P0=0 P1=0 P2=0 P3=2 | CQ P0=0 P1=0 P2=0 P3=2 | SP P0=0 P1=0 P2=0 P3=0 | TC P0=0 P1=0 P2=0 P3=0
 
 Vendor: codex-cli
 HEAD: aef9999d567890abcdef1234567890abcdef1234
@@ -230,6 +230,60 @@ Commits pushed this loop: aef1111, aef2222, aef9999
         self.assertTrue(result.ok, result.errors)
         self.assertEqual(result.kind, "LOOP_DONE")
         self.assertEqual(result.internal_rounds, 3)
+
+    def test_missing_first_line_counts_fails(self):
+        text = """LOOP_DONE_codex-cli_aef9999
+
+Vendor: codex-cli
+HEAD: aef9999d567890abcdef1234567890abcdef1234
+Internal rounds taken: 3
+Final internal review:
+  CQ: P0=0 P1=0 P2=0 P3=2 Nit=1
+  SP: P0=0 P1=0 P2=0 P3=0 Nit=0
+  TC: P0=0 P1=0 P2=0 P3=0 Nit=0
+Gates: typecheck=PASS, lint=PASS, test=PASS 100/100
+CI: not yet fired
+Commits pushed this loop: aef1111, aef2222, aef9999
+"""
+        result = vm.validate_marker(text)
+        self.assertFalse(result.ok)
+        self.assertIn("aggregate and per-category P0/P1/P2/P3 counts", " ".join(result.errors))
+
+    def test_first_line_counts_must_match_lane_totals(self):
+        text = """LOOP_DONE_codex-cli_aef9999 TOTAL P0=0 P1=0 P2=0 P3=1 | CQ P0=0 P1=0 P2=0 P3=1 | SP P0=0 P1=0 P2=0 P3=0 | TC P0=0 P1=0 P2=0 P3=0
+
+Vendor: codex-cli
+HEAD: aef9999d567890abcdef1234567890abcdef1234
+Internal rounds taken: 3
+Final internal review:
+  CQ: P0=0 P1=0 P2=0 P3=2 Nit=1
+  SP: P0=0 P1=0 P2=0 P3=0 Nit=0
+  TC: P0=0 P1=0 P2=0 P3=0 Nit=0
+Gates: typecheck=PASS, lint=PASS, test=PASS 100/100
+CI: not yet fired
+Commits pushed this loop: aef1111, aef2222, aef9999
+"""
+        result = vm.validate_marker(text)
+        self.assertFalse(result.ok)
+        self.assertIn("do not match per-lane totals", " ".join(result.errors))
+
+    def test_blocking_loop_done_counts_fail(self):
+        text = """LOOP_DONE_codex-cli_aef9999 TOTAL P0=0 P1=0 P2=1 P3=0 | CQ P0=0 P1=0 P2=1 P3=0 | SP P0=0 P1=0 P2=0 P3=0 | TC P0=0 P1=0 P2=0 P3=0
+
+Vendor: codex-cli
+HEAD: aef9999d567890abcdef1234567890abcdef1234
+Internal rounds taken: 3
+Final internal review:
+  CQ: P0=0 P1=0 P2=1 P3=0 Nit=0
+  SP: P0=0 P1=0 P2=0 P3=0 Nit=0
+  TC: P0=0 P1=0 P2=0 P3=0 Nit=0
+Gates: typecheck=PASS, lint=PASS, test=PASS 100/100
+CI: not yet fired
+Commits pushed this loop: aef1111, aef2222, aef9999
+"""
+        result = vm.validate_marker(text)
+        self.assertFalse(result.ok)
+        self.assertIn("LOOP_DONE lane CQ has P0/P1/P2 non-zero", " ".join(result.errors))
 
 
 class TestKindDetection(unittest.TestCase):

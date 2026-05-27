@@ -1,7 +1,7 @@
 # PACT — Agent Review Contract
 
-**Version:** v1.0.6
-**Canonical URL:** https://raw.githubusercontent.com/fastxyz/pact/v1.0.6/CONTRACT.md
+**Version:** v1.0.7
+**Canonical URL:** https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/CONTRACT.md
 
 This document is the canonical rule book for `fastxyz/pact`. Agents (Claude, Codex, and any future LLM) follow this contract when working on a PR governed by PACT. Projects opt in by adding a one-line pin to their `AGENTS.md` / `CLAUDE.md` (see this repo's README).
 
@@ -69,7 +69,7 @@ The Disposition section is omitted on the initial implementation (R1) when there
 **LOOP_DONE** — posted by `/loop` when the running vendor's internal review reaches P0=P1=P2=0:
 
 ```
-LOOP_DONE_<vendor>_<sha>
+LOOP_DONE_<vendor>_<sha> TOTAL P0=0 P1=0 P2=0 P3=<total-p3> | CQ P0=0 P1=0 P2=0 P3=<cq-p3> | SP P0=0 P1=0 P2=0 P3=<sp-p3> | TC P0=0 P1=0 P2=0 P3=<tc-p3>
 
 Vendor: <vendor name, e.g. claude-code, codex-cli>
 HEAD: <full commit SHA>
@@ -135,9 +135,11 @@ CI status: <green|red|not fired>
 
 The `Existing markers on HEAD` field is REQUIRED on both `REVIEW_CLEAN` and `REVIEW_FINDINGS`. See the `REVIEW_CLEAN` schema note above for rationale: it forces the reviewer to enumerate prior markers as a precondition for posting, which both enables the round-zero check (`commands/review.md` step 3) and prevents stale "needs another vendor" closing lines when the gate is already satisfied. A non-trivial `REVIEW_FINDINGS` whose body shows a different vendor already posted a clean marker on the same HEAD is a contract-aware signal that something materially new must have changed (e.g., a regression the prior vendor missed) — surface that in the findings, don't bury it.
 
-**Review marker first-line counts:** every `REVIEW_CLEAN` and `REVIEW_FINDINGS` marker MUST put the aggregate P0/P1/P2/P3 counts on the first line, immediately after the marker title. The first line gives the aggregate totals first, then the same P0/P1/P2/P3 counts split by category/lane (`CQ`, `SP`, `TC`). The aggregate totals are summed across CQ, SP, and TC, and both the aggregate and per-category counts MUST match the detailed per-lane section in the body. `REVIEW_CLEAN` therefore always has `P0=0 P1=0 P2=0`, while `P3` may be non-zero for advisory findings. This first-line count is mandatory so a human scanning PR comments can see the review severity summary without reading the whole marker.
+**Stats-first marker lines and user summaries:** every `LOOP_DONE`, `REVIEW_CLEAN`, and `REVIEW_FINDINGS` marker MUST put the aggregate P0/P1/P2/P3 counts on the first line, immediately after the marker title. The first line gives the aggregate totals first, then the same P0/P1/P2/P3 counts split by category/lane (`CQ`, `SP`, `TC`). The aggregate totals are summed across CQ, SP, and TC, and both the aggregate and per-category counts MUST match the detailed per-lane section in the body. `LOOP_DONE` and `REVIEW_CLEAN` therefore always have `P0=0 P1=0 P2=0`, while `P3` may be non-zero for advisory findings.
 
-**Loop iteration status for humans:** every `/loop` invocation MUST report P0/P1/P2 blocker counts at the start and end of each internal round. The status lines put aggregate totals first, followed by the CQ/SP/TC per-category totals, using this shape: `Round <n> starting: remaining blockers TOTAL P0=<a> P1=<b> P2=<c> | CQ P0=<a> P1=<b> P2=<c> | SP P0=<a> P1=<b> P2=<c> | TC P0=<a> P1=<b> P2=<c>.` and `Round <n> finished: remaining blockers ...`. These user-facing summaries are mandatory because the user's goal is clearing P0/P1/P2 blockers; commit hashes, exact test counts, and implementation details are secondary.
+Every user-facing `/review` result, `/loop` round-start status, `/loop` round-finished status, cap-exhausted halt, duplicate-guard exit, and final response after posting `LOOP_DONE`, `REVIEW_CLEAN`, or `REVIEW_FINDINGS` MUST start its first paragraph with `TOTAL P0=<n> P1=<n> P2=<n> P3=<n>.` If P0/P1/P2 are all zero, the first paragraph MUST explicitly say `P0/P1/P2 are zero` before any merge-gate or next-action text. Do not lead with commit hashes, CI status, round counts, test counts, implementation detail, or vendor narration before the severity totals.
+
+**Loop iteration status for humans:** every `/loop` invocation MUST report P0/P1/P2/P3 counts at the start and end of each internal round. The status lines put aggregate totals first, followed by the CQ/SP/TC per-category totals, using this shape: `TOTAL P0=<a> P1=<b> P2=<c> P3=<d>. Round <n> starting: remaining review counts | CQ P0=<cq-p0> P1=<cq-p1> P2=<cq-p2> P3=<cq-p3> | SP P0=<sp-p0> P1=<sp-p1> P2=<sp-p2> P3=<sp-p3> | TC P0=<tc-p0> P1=<tc-p1> P2=<tc-p2> P3=<tc-p3>.` and `TOTAL P0=<a> P1=<b> P2=<c> P3=<d>. Round <n> finished: remaining review counts ...`. These user-facing summaries are mandatory because the user's goal is understanding whether P0/P1/P2 blockers remain; P3 advisories, commit hashes, exact test counts, and implementation details are secondary.
 
 **Round-counter rules:** `R<N>` appears only on `REVIEW_FINDINGS`. Each vendor maintains its own R counter, incrementing only when that vendor posts a new `REVIEW_FINDINGS`. `CODE_DONE`, `LOOP_DONE`, and `REVIEW_CLEAN` do not carry R counters (they are terminal verdicts for that invocation, or in `CODE_DONE`'s case, a "your turn" signal).
 

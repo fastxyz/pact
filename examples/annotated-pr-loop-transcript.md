@@ -7,7 +7,7 @@ A worked example of a hypothetical PR going through the PACT cycle. Use this as 
 - Project: `fastxyz/some-app`
 - PR: #500 — "feat(auth): add session refresh token rotation"
 - Vendors used: `codex-cli` (coder) and `claude-code` (reviewer)
-- PACT version: v1.0.0
+- PACT version: v1.0.7
 
 The author opens two CLI windows:
 - **Window A:** Codex CLI inside the project directory
@@ -33,7 +33,7 @@ The author types `/loop 500` in Codex. Codex:
 5. Posts marker:
 
 ```
-LOOP_DONE_codex-cli_c9f2e55
+LOOP_DONE_codex-cli_c9f2e55 TOTAL P0=0 P1=0 P2=0 P3=1 | CQ P0=0 P1=0 P2=0 P3=1 | SP P0=0 P1=0 P2=0 P3=0 | TC P0=0 P1=0 P2=0 P3=0
 
 Vendor: codex-cli
 HEAD: c9f2e55a1b2c3d4e5f6789abcdef0123456789ab
@@ -47,7 +47,7 @@ CI: not yet fired
 Commits pushed this loop: b8e1d44, c9f2e55
 ```
 
-Codex prints: "Merge gate (CONTRACT §7) needs a clean marker from a different vendor on HEAD `c9f2e55`. Switch to another vendor's CLI and run `/review 500` (or `/loop 500`)."
+Codex prints: "TOTAL P0=0 P1=0 P2=0 P3=1. P0/P1/P2 are zero; merge gate (CONTRACT §7) needs a clean marker from a different vendor on HEAD `c9f2e55`. Switch to another vendor's CLI and run `/review 500` (or `/loop 500`)."
 
 ### Turn 2 (Window B): Claude Code `/review 500`
 
@@ -79,7 +79,7 @@ Local gates on this HEAD: typecheck=PASS, lint=PASS, test=PASS 247/247
 CI status: green
 ```
 
-Claude Code prints: "Findings posted. Run `/code` or `/loop 500` in the coder vendor's CLI to address them."
+Claude Code prints: "TOTAL P0=0 P1=1 P2=1 P3=0. P0/P1/P2 blockers remain; findings posted. Run `/code` or `/loop 500` in the coder vendor's CLI to address them."
 
 ### Turn 3 (Window A): Codex `/loop 500`
 
@@ -94,7 +94,7 @@ Author back to Window A. Codex:
 3. Posts marker:
 
 ```
-LOOP_DONE_codex-cli_d0a1b22
+LOOP_DONE_codex-cli_d0a1b22 TOTAL P0=0 P1=0 P2=0 P3=1 | CQ P0=0 P1=0 P2=0 P3=1 | SP P0=0 P1=0 P2=0 P3=0 | TC P0=0 P1=0 P2=0 P3=0
 
 Vendor: codex-cli
 HEAD: d0a1b22a1b2c3d4e5f6789abcdef0123456789ab
@@ -107,6 +107,8 @@ Gates: typecheck=PASS, lint=PASS, test=PASS 249/249
 CI: green
 Commits pushed this loop: d0a1b22
 ```
+
+Codex prints: "TOTAL P0=0 P1=0 P2=0 P3=1. P0/P1/P2 are zero; merge gate (CONTRACT §7) needs a clean marker from a different vendor on HEAD `d0a1b22`. Switch to another vendor's CLI and run `/review 500` (or `/loop 500`)."
 
 ### Turn 4 (Window B): Claude Code `/review 500`
 
@@ -128,6 +130,8 @@ P3 findings (advisory):
 Local gates on this HEAD: typecheck=PASS, lint=PASS, test=PASS 249/249
 CI status: green
 ```
+
+Claude Code prints: "TOTAL P0=0 P1=0 P2=0 P3=1. P0/P1/P2 are zero; merge gate satisfied on HEAD `d0a1b22` (this vendor + prior `codex-cli` clean marker). Human authorization required to merge."
 
 ### Merge gate satisfied
 

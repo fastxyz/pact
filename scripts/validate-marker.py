@@ -57,19 +57,19 @@ def validate_marker(text: str) -> ValidationResult:
     first_line_summary = m.group(5)
     first_line_counts = None
     first_line_lane_counts = {}
-    review_summary_rx = re.compile(
+    severity_summary_rx = re.compile(
         r"^TOTAL P0=(\d+) P1=(\d+) P2=(\d+) P3=(\d+)"
         r" \| CQ P0=(\d+) P1=(\d+) P2=(\d+) P3=(\d+)"
         r" \| SP P0=(\d+) P1=(\d+) P2=(\d+) P3=(\d+)"
         r" \| TC P0=(\d+) P1=(\d+) P2=(\d+) P3=(\d+)$"
     )
 
-    if result.kind in ("REVIEW_CLEAN", "REVIEW_FINDINGS"):
+    if result.kind in ("LOOP_DONE", "REVIEW_CLEAN", "REVIEW_FINDINGS"):
         if first_line_summary is None:
             result.ok = False
             result.errors.append(f"{result.kind} title line must include aggregate and per-category P0/P1/P2/P3 counts")
         else:
-            m_counts = review_summary_rx.match(first_line_summary)
+            m_counts = severity_summary_rx.match(first_line_summary)
             if not m_counts:
                 result.ok = False
                 result.errors.append(
@@ -88,7 +88,7 @@ def validate_marker(text: str) -> ValidationResult:
                 }
     elif first_line_summary is not None:
         result.ok = False
-        result.errors.append(f"{result.kind} title line must not include review severity counts")
+        result.errors.append(f"{result.kind} title line must not include severity counts")
 
     if result.kind == "REVIEW_FINDINGS" and round_str is None:
         result.ok = False
@@ -144,7 +144,7 @@ def validate_marker(text: str) -> ValidationResult:
                 result.ok = False
                 result.errors.append("Internal rounds taken is not an integer")
 
-    if result.kind in ("REVIEW_CLEAN", "REVIEW_FINDINGS"):
+    if result.kind in ("LOOP_DONE", "REVIEW_CLEAN", "REVIEW_FINDINGS"):
         lane_rx = re.compile(r"^\s+(CQ|SP|TC): P0=(\d+) P1=(\d+) P2=(\d+) P3=(\d+) Nit=(\d+)$")
         lane_totals = [0, 0, 0, 0]
         lane_counts = {}
@@ -159,11 +159,16 @@ def validate_marker(text: str) -> ValidationResult:
             lane_totals[1] += p1
             lane_totals[2] += p2
             lane_totals[3] += p3
-            if result.kind == "REVIEW_CLEAN" and (p0 or p1 or p2):
+            if result.kind in ("LOOP_DONE", "REVIEW_CLEAN") and (p0 or p1 or p2):
                 result.ok = False
-                result.errors.append(
-                    f"REVIEW_CLEAN lane {lane} has P0/P1/P2 non-zero (P0={p0} P1={p1} P2={p2}); use REVIEW_FINDINGS instead"
-                )
+                if result.kind == "REVIEW_CLEAN":
+                    result.errors.append(
+                        f"REVIEW_CLEAN lane {lane} has P0/P1/P2 non-zero (P0={p0} P1={p1} P2={p2}); use REVIEW_FINDINGS instead"
+                    )
+                else:
+                    result.errors.append(
+                        f"LOOP_DONE lane {lane} has P0/P1/P2 non-zero (P0={p0} P1={p1} P2={p2}); do not post LOOP_DONE with blockers"
+                    )
         if set(lane_counts) != set(LANES):
             result.ok = False
             result.errors.append(f"{result.kind} must include one per-lane count row for each of CQ, SP, and TC")

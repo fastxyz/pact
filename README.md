@@ -47,6 +47,8 @@ You only re-prime ("Learn https://github.com/fastxyz/pact") at the start of a ne
 
 A PR is mergeable when **two different vendors** have each posted a clean marker (`LOOP_DONE` or `REVIEW_CLEAN`) on the **same HEAD SHA**. Anything else — `CODE_DONE` alone, one vendor's `LOOP_DONE` without a cross-check, gates failing — does NOT satisfy the gate.
 
+Every review or loop status must start with the aggregate severity counts: `TOTAL P0=<n> P1=<n> P2=<n> P3=<n>.` If P0/P1/P2 are all zero, say that in the first paragraph before merge-gate or next-action text.
+
 The contract is what keeps both vendors honest. No agent invokes another. You are the orchestrator, alternating between vendor windows.
 
 ## Optional: install as native slash commands
