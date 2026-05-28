@@ -1,6 +1,6 @@
 # PACT — Agent Review Contract
 
-**Version:** v1.1.0
+**Version:** v1.1.1
 **Canonical URL:** https://raw.githubusercontent.com/fastxyz/pact/main/CONTRACT.md
 
 This document is the canonical rule book for `fastxyz/pact`. Agents (Claude, Codex, and any future LLM) follow this contract when working on a PR governed by PACT. Projects opt in by adding a one-line pin to their `AGENTS.md` / `CLAUDE.md` (see this repo's README).
@@ -57,6 +57,8 @@ This isolation is exactly what lets the "N windows, N PRs" workflow run without 
 ## 5. Marker formats
 
 Four marker types appear as PR comments. Each is a single fenced-code block at the top of the PR comment so it can be programmatically parsed.
+
+**Marker authorship: GitHub author ≠ vendor.** PACT markers are PR comments posted via `gh pr comment` from the human operator's GitHub account. The comment's `authorLogin` is therefore always the human who invoked the command — *not* the agent that performed the work. The authoritative attribution is the `Vendor:` field in the marker body and the `<vendor>` token in the marker title (e.g. `LOOP_DONE_codex-cli_<sha>`). When you are told to "look at the other vendor's review" on a PACT-governed PR, identify markers by **marker title prefix and `Vendor:` field**, never by GitHub author. All marker comments on a given PR will typically share the same human author, but may represent any number of distinct vendors. Concluding "the other vendor hasn't reviewed yet" because every comment is authored by the same human is the canonical PACT misread — avoid it.
 
 **CODE_DONE** — posted by `/code` when the running vendor finishes a one-shot coding pass (no internal review):
 
