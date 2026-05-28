@@ -4,7 +4,11 @@
 **Where it runs:** one vendor's CLI window.
 **What it does:** one coding pass. Reads the latest unresolved `REVIEW_FINDINGS` marker on the PR (from **any vendor — different OR same**), implements the fixes (or the initial spec on R1), pushes the commits, posts `CODE_DONE_<vendor>_<sha>`. Does NOT self-review.
 
-The "any vendor" wording matters: `/code` is not restricted to cross-vendor handoff. A user can manually compose `/loop` as alternating `/review` + `/code` in the same vendor's window, addressing findings from that same vendor's prior `/review`. The cross-vendor merge gate (CONTRACT §6) is enforced by requiring two clean markers on the same HEAD — it does not constrain who finds what during the path to that gate.
+The "any vendor" wording matters: `/code` is not restricted to cross-vendor handoff. A user can manually compose `/loop` as alternating `/review` + `/code` in the same vendor's window, addressing findings from that same vendor's prior `/review`. The cross-vendor merge gate (CONTRACT §6) is enforced by requiring two clean markers on the same HEAD — it does not constrain who finds what during the path to that gate. Either vendor may code a given PR, in any order — see CONTRACT §4 ("roles are activities, not vendor assignments").
+
+## Workspace
+
+Run in an **isolated git worktree** bound to this PR's branch (CONTRACT §4a) — never a directory shared with another PR or another running session. Before implementing, `git fetch` and fast-forward to the PR branch's latest pushed HEAD so you don't clobber commits the other vendor (or an earlier session) pushed; push when the pass finishes.
 
 ## Step-by-step (vendor-agnostic)
 

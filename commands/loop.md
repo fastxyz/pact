@@ -15,6 +15,10 @@ The optional `[N]` is the max-internal-rounds cap, in square brackets. Default 5
 
 The adapter is responsible for parsing both orders.
 
+## Workspace
+
+Run in an **isolated git worktree** bound to this PR's branch (CONTRACT §4a) — never a directory shared with another PR or another running session. Each Coder phase begins by fetching and fast-forwarding to the PR branch's latest pushed HEAD so the other vendor's commits are not clobbered; push when the pass finishes.
+
 ## Step-by-step (vendor-agnostic)
 
 1. Read `CONTRACT.md`, `roles/coder.md`, `roles/reviewer.md`

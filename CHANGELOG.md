@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.1.0 — 2026-05-28
+
+### Adds: workspace isolation for parallel PRs, explicit fluid-role model, explicit push-vs-merge boundary
+
+- **New CONTRACT §4a "Workspace isolation" (mandatory).** Every `/code`, `/loop`, and `/review` session must run in its own isolated git worktree bound to exactly one PR's branch — never shared across PRs, never shared across two sessions running at the same time — and must fetch/fast-forward to the PR's latest pushed HEAD before coding. This is the rule that lets many PRs run in parallel (and two vendors advance one PR) without clobbering each other's uncommitted work. `commands/code.md`, `commands/loop.md`, `commands/review.md`, and `roles/coder.md` each gain a Workspace note pointing at §4a.
+- **CONTRACT §4 clarified: roles are activities, not vendor assignments.** Either vendor may write/modify the code and either may review it, in any order, across or within rounds (both vendors can land fixes in the same round); each review is attributed to its vendor via the marker `Vendor:` field. The sole invariant remains the merge gate (§1): two different vendors' clean reviews on the same final HEAD.
+- **CONTRACT §7 clarified: agents push, only humans merge.** Pushing commits and posting markers are normal autonomous parts of the commands (that is how the other vendor gets a HEAD to review); an agent never waits for permission to push. Merging — landing the PR into the base branch — is never an agent action, even after both clean markers exist; it is always performed by a human.
+- **Adapter + canonical fetch URLs repointed from a pinned tag to `main`.** `adapters/{claude-code,codex-cli}/{code,loop,review}.md` and the contract's own Canonical URL now fetch `…/fastxyz/pact/main/…` instead of a hardcoded version tag, so future contract clarifications reach agents immediately without per-release URL churn. Pin a tag only when strict reproducibility is needed (see README). Version tags remain as historical records.
+
+No changes to marker schemas, lanes, severities, escalation triggers, or the merge-gate definition itself.
+
 ## v1.0.7 — 2026-05-27
 
 ### Schema + UX clarification

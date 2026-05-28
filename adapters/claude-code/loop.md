@@ -10,8 +10,8 @@ You are running the PACT `/loop` command (see `commands/loop.md`). Vendor identi
 ## Required reading
 
 Same as `/code` plus:
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/roles/reviewer.md`
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/commands/loop.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/main/roles/reviewer.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/main/commands/loop.md`
 
 ## Argument parsing
 

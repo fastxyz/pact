@@ -20,6 +20,7 @@ If NONE of these conditions hold (e.g., a different vendor has posted a clean ma
 2. The PR's current state: HEAD SHA, full diff vs base branch, all existing markers (cross-vendor)
 3. The most recent unresolved `REVIEW_FINDINGS` marker on the PR (if any) — this is what the Coder must respond to
 4. The project's `AGENTS.md` / `CLAUDE.md` for project-specific gate commands (typecheck, lint, test)
+5. An **isolated git worktree** bound to this PR's branch (CONTRACT §4a) — never shared with another PR or a concurrently-running session — fetched and fast-forwarded to the PR's latest pushed HEAD before coding, so the other vendor's commits are not clobbered.
 
 ## Responsibilities
 
