@@ -9,9 +9,9 @@ You are running the PACT `/code` command (see `commands/code.md` in `fastxyz/pac
 
 ## Required reading (in order)
 
-1. `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/CONTRACT.md` — fetch with `Bash` (`curl -sL <url>`); read §1, §3, §4, §5, §8 carefully
-2. `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/roles/coder.md` — fetch similarly
-3. `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/commands/code.md` — fetch similarly
+1. `https://raw.githubusercontent.com/fastxyz/pact/main/CONTRACT.md` — fetch with `Bash` (`curl -sL <url>`); read §1, §3, §4, §5, §8 carefully
+2. `https://raw.githubusercontent.com/fastxyz/pact/main/roles/coder.md` — fetch similarly
+3. `https://raw.githubusercontent.com/fastxyz/pact/main/commands/code.md` — fetch similarly
 4. The current project's `AGENTS.md` and `CLAUDE.md` — for gate commands and project conventions
 
 If a project pins a different PACT version (its `AGENTS.md` says `follows fastxyz/pact v1.x` with a specific version), substitute that version in the URLs above.

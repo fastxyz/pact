@@ -9,8 +9,8 @@ You are executing PACT (`fastxyz/pact`) `/loop` for PR #<PR>, with internal-roun
 ## Required reading
 
 Same as `/code` plus:
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/roles/reviewer.md`
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/commands/loop.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/main/roles/reviewer.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/main/commands/loop.md`
 
 ## Argument parsing
 

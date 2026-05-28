@@ -1,7 +1,7 @@
 # PACT — Agent Review Contract
 
-**Version:** v1.0.7
-**Canonical URL:** https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/CONTRACT.md
+**Version:** v1.1.0
+**Canonical URL:** https://raw.githubusercontent.com/fastxyz/pact/main/CONTRACT.md
 
 This document is the canonical rule book for `fastxyz/pact`. Agents (Claude, Codex, and any future LLM) follow this contract when working on a PR governed by PACT. Projects opt in by adding a one-line pin to their `AGENTS.md` / `CLAUDE.md` (see this repo's README).
 
@@ -41,6 +41,18 @@ A PR is mergeable when **P0 = P1 = P2 = 0** under independent reviews by at leas
 A single vendor's `/loop` command (§6.2) alternates these roles **internally** — its multi-agent dispatch acts as a Reviewer on code its same vendor just produced. This intra-vendor self-loop is allowed and expected — it's how a vendor reaches its own fixed point. The vendor's internal review is not the merge gate.
 
 The **merge gate** (§1) requires two **different vendors** to each independently sign off on the same HEAD. A PR cannot merge with only one vendor's clean marker, regardless of how thorough that vendor's internal loop was.
+
+**Roles are activities, not vendor assignments.** Nothing reserves "coding" to one vendor and "reviewing" to the other. On any PR, *either* vendor may write or modify the code, and *either* vendor may review it — in any order, across any number of rounds, and even within the same round (e.g. one vendor lands a fix for finding A while the other lands a fix for finding B). Both vendors may contribute code to the same PR, and both may review it. Each review is attributed to the vendor that performed it via the `Vendor:` field in its marker. The single invariant is the merge gate (§1): the code is accepted only when it carries P0=P1=P2=0 from **both** vendors' independent reviews on the same final HEAD.
+
+## 4a. Workspace isolation (required for parallel PRs)
+
+PACT is built for many PRs in flight at once, each potentially advanced by more than one vendor. Workspace isolation is what keeps them from corrupting each other, and it is **mandatory**:
+
+- **One isolated git worktree per session.** Every `/code`, `/loop`, and `/review` invocation runs in its own dedicated git worktree (or equivalent isolated checkout) bound to exactly one PR's branch. A workspace is **never** shared between two PRs, and **never** between two agent sessions running at the same time.
+- **Never two agents in one working directory at once.** Concurrent agents writing the same checkout silently clobber each other's uncommitted changes. If two vendors are advancing the same PR, each works in its own worktree on that PR's branch.
+- **Sync before you code.** A coding pass begins by fetching and fast-forwarding to the PR branch's latest pushed HEAD, so commits from the other vendor (or an earlier session) are never overwritten; push when the pass finishes. Within a PR, vendors coordinate **only** through the PR branch (push/pull) — never through a shared working directory.
+
+This isolation is exactly what lets the "N windows, N PRs" workflow run without coders stepping on each other.
 
 ## 5. Marker formats
 
@@ -166,6 +178,8 @@ See each command's spec for step-by-step behavior. Vendor-specific implementatio
 **External (per-vendor fixed point via `/review`):** the running vendor's external review reports 0 P0/P1/P2 with gates green. Posts `REVIEW_CLEAN` and exits.
 
 **Merge gate (cross-vendor):** the PR has both `LOOP_DONE_<vendor1>_<sha>` (or `REVIEW_CLEAN_<vendor1>_<sha>`) AND a `LOOP_DONE` or `REVIEW_CLEAN` from a different vendor on the SAME HEAD `<sha>`. Once both clean markers exist on the same HEAD, the PR is mergeable. Human authorization is still required (no auto-merge).
+
+**Agents push; only humans merge.** Pushing commits to the PR branch and posting markers are normal, autonomous parts of `/code`, `/loop`, and `/review` — an agent does not wait for permission to push (that is exactly how the other vendor gets a HEAD to review). **Merging is never an agent action.** No agent merges a PR, deletes its branch, or otherwise lands it into the base branch — not even after both clean markers exist. The merge is always performed by a human.
 
 If a new commit lands after a clean marker is posted, that marker is stale for merge-gate purposes — the vendor that posted it must re-run its command on the new HEAD.
 

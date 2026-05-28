@@ -4,6 +4,10 @@
 **Where it runs:** one vendor's CLI window.
 **What it does:** performs ONE external multi-lane review of the PR's current HEAD. Posts either `REVIEW_CLEAN_<vendor>_<sha>` (no findings) or `REVIEW_FINDINGS_<vendor>_R<N>_<sha>` (findings). Does NOT write code.
 
+## Workspace
+
+Run in an **isolated git worktree** bound to this PR's branch (CONTRACT §4a) — never a directory shared with another PR or another running session. Check out the exact HEAD you are reviewing before running local gates.
+
 ## Step-by-step (vendor-agnostic)
 
 1. Read `CONTRACT.md` and `roles/reviewer.md`

@@ -9,9 +9,9 @@ You are running the PACT `/review` command (see `commands/review.md`). Vendor id
 
 ## Required reading
 
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/CONTRACT.md`
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/roles/reviewer.md`
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/commands/review.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/main/CONTRACT.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/main/roles/reviewer.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/main/commands/review.md`
 
 ## Execution
 
