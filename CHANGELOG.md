@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.1.0 — 2026-05-28
+
+### Merge gate: two independent clean reviews, vendor-agnostic (coder irrelevant)
+
+**The merge gate no longer requires the two clean reviews to come from two _different_ vendors.** It now requires **two independent clean reviews on the same HEAD** (CONTRACT §1, §7). Two different vendors remains the gold standard and the recommended default — different models have different blind spots. But **when only one vendor is available, that vendor may supply both review passes** (two `/review` runs, or a `/loop` plus a `/review`). And **who writes the code is irrelevant to the gate** — the coder vendor may also review.
+
+Motivation: in practice a second vendor isn't always available (one CLI, rate limits, outages). The previous hard "two _different_ vendors" rule made such PRs un-mergeable under PACT even after thorough independent review. The principle we actually want is *independent reviews*, not *cross-vendor for its own sake*.
+
+**Relationship to v1.0.6 — this qualifies it, it does not reinstate the v1.0.5 bug.** v1.0.6 correctly rejected v1.0.5's premise that *one* clean marker could satisfy the gate (a vendor skipping its vote, leaving the gate stuck at 1/2). v1.1.0 still requires **two** independent clean reviews — a single clean marker is still never enough. What changed is only the *cross-vendor requirement*: the count stays at two; the constraint that they be different vendors is relaxed to a strong recommendation. The 1/2-stuck failure mode v1.0.6 guarded against cannot occur, because the gate still demands a second independent pass.
+
+### Mechanics
+
+- **CONTRACT §1, §3, §4, §7** reworded: gate = two independent clean reviews on the same HEAD; coder identity irrelevant; cross-vendor is the gold standard, same-vendor is the explicit single-vendor fallback.
+- **`commands/review.md` step 3** — the *same-HEAD duplicate guard* (v1.0.6) becomes the **gate-satisfied guard**: it fires only when the HEAD already carries **two** independent clean markers. A HEAD with one clean marker — even this vendor's own — no longer blocks a second pass, because a lone vendor may legitimately cast both votes.
+- **Closing lines** (`commands/review.md` step 9, `commands/loop.md` step 8, and both vendors' adapters) now count two independent clean markers vendor-agnostically ("first of two" / "merge gate satisfied — two independent clean reviews"), instead of templating "needs the other vendor".
+- **`roles/coder.md` / `roles/reviewer.md`**, README, and the `validate-marker.py` comment updated for consistency. No marker schema, lane, severity, escalation-trigger, or R-counter changes; the validator's format checks are unchanged.
+
+Semver: MINOR — a relaxation. Every cross-vendor flow that satisfied the gate under v1.0.x still satisfies it unchanged.
+
 ## v1.0.7 — 2026-05-27
 
 ### Schema + UX clarification

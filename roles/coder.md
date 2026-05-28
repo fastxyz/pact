@@ -12,7 +12,7 @@ The Coder acts only when there is concrete work to do:
 2. **Initial implementation (R1)** — no prior coder marker on the PR; implement the linked spec.
 3. **Same-loop self-review surfaced findings** — the prior iteration of `/loop`'s Self-review phase found things this iteration's Coder phase must fix.
 
-If NONE of these conditions hold (e.g., a different vendor has posted a clean marker and there are no unresolved findings), the Coder phase MUST be skipped. The Coder does not push speculative changes. See `commands/loop.md` step 5 for the round-zero check that enforces this in `/loop`.
+If NONE of these conditions hold (e.g., a clean marker already exists on the HEAD and there are no unresolved findings), the Coder phase MUST be skipped. The Coder does not push speculative changes. See `commands/loop.md` step 5 for the round-zero check that enforces this in `/loop`.
 
 ## Inputs
 

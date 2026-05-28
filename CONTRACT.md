@@ -1,13 +1,17 @@
 # PACT — Agent Review Contract
 
-**Version:** v1.0.7
-**Canonical URL:** https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/CONTRACT.md
+**Version:** v1.1.0
+**Canonical URL:** https://raw.githubusercontent.com/fastxyz/pact/v1.1.0/CONTRACT.md
 
 This document is the canonical rule book for `fastxyz/pact`. Agents (Claude, Codex, and any future LLM) follow this contract when working on a PR governed by PACT. Projects opt in by adding a one-line pin to their `AGENTS.md` / `CLAUDE.md` (see this repo's README).
 
 ## 1. The Merge Gate (non-negotiable)
 
-> Any PR merged in a PACT-governed project must have **P0 = P1 = P2 = 0** from independent reviews by at least two different LLM vendors, each conducted at the highest reasoning level available.
+> Any PR merged in a PACT-governed project must have **P0 = P1 = P2 = 0** confirmed by **two independent clean reviews on the same HEAD**, each conducted at the highest reasoning level available.
+
+**Who writes the code is irrelevant to the gate.** The code may be written by hand, by either vendor, or by any `/code` / `/loop` pass — the gate makes no demand on the coder's identity. What it requires is that the resulting HEAD receives two independent clean reviews.
+
+**Two _different_ vendors reviewing is the gold standard** and the recommended default: different models have different blind spots, so cross-vendor review is the strongest form of independence. Use a second vendor whenever one is available. **When only one vendor is available, that vendor may supply both independent review passes** — two separate `/review` runs, or a `/loop` (its converged self-review) plus a `/review`. Same-vendor double review is weaker than cross-vendor and is an explicit fallback, not the preferred path. What is never sufficient: a single review pass, or a `CODE_DONE` alone.
 
 How the PR reaches that state is the author's choice. They may write the code by hand, use this repo's commands (§6), or follow their own discipline. The gate is the only non-negotiable rule.
 
@@ -31,16 +35,16 @@ Every multi-lane review uses these three lanes. If the underlying agent supports
 | P3 | advisory, deferrable with reason | no |
 | Nit | optional polish | no |
 
-A PR is mergeable when **P0 = P1 = P2 = 0** under independent reviews by at least two different vendors.
+A PR is mergeable when **P0 = P1 = P2 = 0** under two independent clean reviews on the same HEAD (§1) — two different vendors when available, otherwise the same vendor twice.
 
 ## 4. Roles
 
 - **Coder** — proposes code via PR commits. Detailed responsibilities: see `roles/coder.md`.
 - **Reviewer** — performs the multi-lane review per §2. Detailed responsibilities: see `roles/reviewer.md`.
 
-A single vendor's `/loop` command (§6.2) alternates these roles **internally** — its multi-agent dispatch acts as a Reviewer on code its same vendor just produced. This intra-vendor self-loop is allowed and expected — it's how a vendor reaches its own fixed point. The vendor's internal review is not the merge gate.
+A single vendor's `/loop` command (§6.2) alternates these roles **internally** — its multi-agent dispatch acts as a Reviewer on code its same vendor just produced. This intra-vendor self-loop is allowed and expected — it's how a vendor reaches its own fixed point. A single clean marker — even a thorough `/loop` — does not satisfy the merge gate by itself.
 
-The **merge gate** (§1) requires two **different vendors** to each independently sign off on the same HEAD. A PR cannot merge with only one vendor's clean marker, regardless of how thorough that vendor's internal loop was.
+The **merge gate** (§1) requires **two independent clean reviews** on the same HEAD. Two different vendors is the gold standard and the default; when only one vendor is available it may supply both passes (§1). A PR cannot merge on a single clean marker, regardless of how thorough that vendor's internal loop was — two independent review passes are always required.
 
 ## 5. Marker formats
 
@@ -62,7 +66,7 @@ Gates: typecheck=<PASS|FAIL>, lint=<PASS|FAIL>, test=<PASS:<n>/<m>|FAIL:<n>/<m>>
 CI: <link or "not yet fired">
 ```
 
-`CODE_DONE` is an "I pushed code, please review" signal. It is NOT a clean marker — it does not satisfy any part of the merge gate by itself. The merge gate still requires clean reviews (`LOOP_DONE` or `REVIEW_CLEAN`) from two different vendors on the same HEAD.
+`CODE_DONE` is an "I pushed code, please review" signal. It is NOT a clean marker — it does not satisfy any part of the merge gate by itself. The merge gate still requires two independent clean reviews (`LOOP_DONE` or `REVIEW_CLEAN`) on the same HEAD — two different vendors when available, otherwise the same vendor twice (§1).
 
 The Disposition section is omitted on the initial implementation (R1) when there are no prior findings to respond to.
 
@@ -106,7 +110,7 @@ Local gates on this HEAD: typecheck=PASS, lint=PASS, test=PASS <n>/<m>
 CI status: <green|red|not fired>
 ```
 
-The `Existing markers on HEAD` field is REQUIRED. Its purpose is to force the reviewer to enumerate prior markers as a precondition for posting — the closing line ("merge gate satisfied" vs "needs another vendor") MUST be derived from this field, not from a template. A `REVIEW_CLEAN` posted without enumerating existing markers is a contract violation. `/review`'s round-zero check (see `commands/review.md` step 3) uses the same enumeration to decide whether to skip the review entirely.
+The `Existing markers on HEAD` field is REQUIRED. Its purpose is to force the reviewer to enumerate prior markers as a precondition for posting — the closing line ("merge gate satisfied" vs "needs a second independent review") MUST be derived from this field, not from a template. Because the gate now counts two independent clean markers regardless of vendor (§1, §7), this enumeration is what tells the reviewer whether posting this marker closes the gate. A `REVIEW_CLEAN` posted without enumerating existing markers is a contract violation. `/review`'s round-zero check (see `commands/review.md` step 3) uses the same enumeration to decide whether to skip the review entirely.
 
 **REVIEW_FINDINGS** — posted by `/review` when the running vendor's external review finds at least one P0/P1/P2:
 
@@ -133,7 +137,7 @@ Local gates on this HEAD: typecheck=<PASS|FAIL>, lint=<PASS|FAIL>, test=<PASS:<n
 CI status: <green|red|not fired>
 ```
 
-The `Existing markers on HEAD` field is REQUIRED on both `REVIEW_CLEAN` and `REVIEW_FINDINGS`. See the `REVIEW_CLEAN` schema note above for rationale: it forces the reviewer to enumerate prior markers as a precondition for posting, which both enables the round-zero check (`commands/review.md` step 3) and prevents stale "needs another vendor" closing lines when the gate is already satisfied. A non-trivial `REVIEW_FINDINGS` whose body shows a different vendor already posted a clean marker on the same HEAD is a contract-aware signal that something materially new must have changed (e.g., a regression the prior vendor missed) — surface that in the findings, don't bury it.
+The `Existing markers on HEAD` field is REQUIRED on both `REVIEW_CLEAN` and `REVIEW_FINDINGS`. See the `REVIEW_CLEAN` schema note above for rationale: it forces the reviewer to enumerate prior markers as a precondition for posting, which both enables the same-HEAD duplicate guard (`commands/review.md` step 3) and prevents stale "needs a second review" closing lines when the gate is already satisfied. A non-trivial `REVIEW_FINDINGS` whose body shows a clean marker (from either vendor) already posted on the same HEAD is a contract-aware signal that something materially new must have changed (e.g., a regression the prior pass missed) — surface that in the findings, don't bury it.
 
 **Stats-first marker lines and user summaries:** every `LOOP_DONE`, `REVIEW_CLEAN`, and `REVIEW_FINDINGS` marker MUST put the aggregate P0/P1/P2/P3 counts on the first line, immediately after the marker title. The first line gives the aggregate totals first, then the same P0/P1/P2/P3 counts split by category/lane (`CQ`, `SP`, `TC`). The aggregate totals are summed across CQ, SP, and TC, and both the aggregate and per-category counts MUST match the detailed per-lane section in the body. `LOOP_DONE` and `REVIEW_CLEAN` therefore always have `P0=0 P1=0 P2=0`, while `P3` may be non-zero for advisory findings.
 
@@ -165,7 +169,7 @@ See each command's spec for step-by-step behavior. Vendor-specific implementatio
 
 **External (per-vendor fixed point via `/review`):** the running vendor's external review reports 0 P0/P1/P2 with gates green. Posts `REVIEW_CLEAN` and exits.
 
-**Merge gate (cross-vendor):** the PR has both `LOOP_DONE_<vendor1>_<sha>` (or `REVIEW_CLEAN_<vendor1>_<sha>`) AND a `LOOP_DONE` or `REVIEW_CLEAN` from a different vendor on the SAME HEAD `<sha>`. Once both clean markers exist on the same HEAD, the PR is mergeable. Human authorization is still required (no auto-merge).
+**Merge gate:** the PR has **two independent clean markers** (`LOOP_DONE_<vendor>_<sha>` or `REVIEW_CLEAN_<vendor>_<sha>`) on the SAME HEAD `<sha>`, from two separate review passes. **Two different vendors is the gold standard and the default.** When only one vendor is available, that vendor may post both — a `/loop` plus a `/review`, or two `/review` runs (see §1). The coder vendor counts: whoever wrote the code may also review it. Once two independent clean markers exist on the same HEAD, the PR is mergeable. Human authorization is still required (no auto-merge).
 
 If a new commit lands after a clean marker is posted, that marker is stale for merge-gate purposes — the vendor that posted it must re-run its command on the new HEAD.
 
@@ -183,11 +187,11 @@ On any escalation, the command halts, prints the trigger reason, and waits for t
 
 ## 9. Disagreement protocol
 
-If the running vendor disagrees with a finding from another vendor (incorporated via the latest `REVIEW_FINDINGS` marker):
+If the running vendor disagrees with a finding from the latest `REVIEW_FINDINGS` marker (whether from another vendor or an earlier same-vendor review pass):
 
 - The vendor records the dispute in the Disposition (`/code`) or per-finding section (`/loop`) of its next marker — using `disputed — Counter: <argument>` for that finding
 - The disputing vendor does NOT silently ignore findings; silent ignoring is a contract violation that fails the merge gate at the human-reviewer check
-- The other vendor's next `/review` reads the disputes; if convinced, the finding is omitted from the new `REVIEW_FINDINGS` marker; if not convinced, the finding reappears
+- The next `/review` (another vendor's, or this vendor's own subsequent pass) reads the disputes; if convinced, the finding is omitted from the new `REVIEW_FINDINGS` marker; if not convinced, the finding reappears
 - If the same finding reappears across 3 review rounds with active dispute, escalation trigger #2 fires
 
 ## 10. Trivial-nit carve-out

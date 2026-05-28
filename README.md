@@ -1,6 +1,6 @@
 # PACT — Agent Review Contract
 
-> **Merge gate (non-negotiable).** Any PR merged in a PACT-governed project must have **P0 = P1 = P2 = 0** from independent reviews by at least **two different LLM vendors**, each at the highest reasoning level available.
+> **Merge gate (non-negotiable).** Any PR merged in a PACT-governed project must have **P0 = P1 = P2 = 0** confirmed by **two independent clean reviews** on the same HEAD, each at the highest reasoning level available. Two **different** vendors is the gold standard; when only one vendor is available, that vendor may supply both review passes. Who writes the code is irrelevant — the gate is about the reviews.
 
 How you reach that state is your choice. Write the code by hand. Use the commands in this repo. Follow your own discipline. The gate is the only non-negotiable rule.
 
@@ -25,7 +25,7 @@ The agent fetches the README, then `CONTRACT.md`, `roles/*.md`, `commands/*.md`,
 | `/loop [10] 282` | same, with internal cap N=10 |
 | `/review 282` | one external multi-lane review of PR 282; posts `REVIEW_CLEAN_<vendor>_<sha>` or `REVIEW_FINDINGS_<vendor>_R<N>_<sha>` |
 
-**4. Alternate windows** until both vendors have posted a clean marker (`LOOP_DONE` or `REVIEW_CLEAN`) on the **same HEAD SHA**. That satisfies the merge gate.
+**4. Get two independent clean markers** (`LOOP_DONE` or `REVIEW_CLEAN`) on the **same HEAD SHA** — alternate windows for two different vendors (preferred), or run two review passes in one vendor when that's all you have. That satisfies the merge gate.
 
 **5. Authorize the merge.** Human stays in the merge loop — PACT does not auto-merge.
 
@@ -45,11 +45,11 @@ You only re-prime ("Learn https://github.com/fastxyz/pact") at the start of a ne
 
 ## The merge gate, restated
 
-A PR is mergeable when **two different vendors** have each posted a clean marker (`LOOP_DONE` or `REVIEW_CLEAN`) on the **same HEAD SHA**. Anything else — `CODE_DONE` alone, one vendor's `LOOP_DONE` without a cross-check, gates failing — does NOT satisfy the gate.
+A PR is mergeable when **two independent clean markers** (`LOOP_DONE` or `REVIEW_CLEAN`) cover the **same HEAD SHA** — two different vendors (the gold standard) or, when only one is available, the same vendor twice. Who wrote the code doesn't matter. Anything else — `CODE_DONE` alone, a single clean marker, gates failing — does NOT satisfy the gate.
 
 Every review or loop status must start with the aggregate severity counts: `TOTAL P0=<n> P1=<n> P2=<n> P3=<n>.` If P0/P1/P2 are all zero, say that in the first paragraph before merge-gate or next-action text.
 
-The contract is what keeps both vendors honest. No agent invokes another. You are the orchestrator, alternating between vendor windows.
+The contract is what keeps the review independent. No agent invokes another. You are the orchestrator, alternating between review passes (across vendors when you have them).
 
 ## Optional: install as native slash commands
 

@@ -186,9 +186,9 @@ def validate_marker(text: str) -> ValidationResult:
 
     # v1.0.5: REVIEW markers MUST enumerate existing markers on the current
     # HEAD. The field forces the reviewer to read the PR state before posting,
-    # which both enables /review's round-zero check (commands/review.md step 3)
-    # and prevents stale "needs another vendor" closing lines when the merge
-    # gate is already satisfied by a prior vendor's clean marker.
+    # which both enables /review's gate-satisfied guard (commands/review.md step 3)
+    # and prevents stale "needs another review" closing lines when the merge
+    # gate is already satisfied by two independent clean reviews on the HEAD.
     if result.kind in ("REVIEW_CLEAN", "REVIEW_FINDINGS"):
         if "Existing markers on HEAD" not in fields_map:
             result.ok = False

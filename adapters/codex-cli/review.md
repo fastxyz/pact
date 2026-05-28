@@ -8,14 +8,14 @@ You are executing PACT (`fastxyz/pact`) `/review` for PR #<PR>. Vendor identifie
 
 ## Required reading
 
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/CONTRACT.md`
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/roles/reviewer.md`
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/commands/review.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/v1.1.0/CONTRACT.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/v1.1.0/roles/reviewer.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/v1.1.0/commands/review.md`
 
 ## Execution
 
 1. Read PR state (`gh pr view`, `gh pr diff`, `gh pr view --comments`, `gh pr checks`), including the full list of existing markers on the current HEAD.
-2. Apply the same-HEAD duplicate guard from `commands/review.md` step 3. If it fires, the first paragraph MUST start `TOTAL P0=0 P1=0 P2=0 P3=<prior-total-p3>. P0/P1/P2 are zero;` and no marker is posted.
+2. Apply the gate-satisfied guard from `commands/review.md` step 3 (fires only when the HEAD already has two independent clean markers). If it fires, the first paragraph MUST start `TOTAL P0=0 P1=0 P2=0 P3=<prior-total-p3>. P0/P1/P2 are zero;` and no marker is posted.
 3. Compute R counter: count prior `REVIEW_FINDINGS_codex-cli_R*` markers on this PR; next R = count + 1.
 4. Spawn three concurrent subtasks (or sequential), one per lane (CQ, SP, TC) per `roles/reviewer.md`.
 5. Aggregate findings into CQ/SP/TC per-category counts and all-lane P0/P1/P2/P3 totals.
@@ -69,8 +69,8 @@ You are executing PACT (`fastxyz/pact`) `/review` for PR #<PR>. Vendor identifie
    Post via `gh pr comment <PR> --body-file <tempfile>`.
 8. If R now equals 5, print the CONTRACT §8 trigger 1 escalation notice.
 9. Print to user, deriving the state from `Existing markers on HEAD` plus the marker just posted. The first paragraph MUST start with the aggregate counts:
-   - If CLEAN and a different-vendor clean marker already exists on this HEAD: "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate satisfied on HEAD `<short-sha>` (this vendor + prior `<other-vendor>` clean marker). Human authorization required to merge."
-   - If CLEAN and no different-vendor clean marker exists yet: "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate needs the other vendor's clean marker on HEAD `<short-sha>`."
-   - If FINDINGS: "TOTAL P0=<total-p0> P1=<total-p1> P2=<total-p2> P3=<total-p3>. P0/P1/P2 blockers remain; findings posted. Run `/code` or `/loop <PR>` in the coder vendor's CLI."
+   - If CLEAN and one independent clean marker (either vendor) already exists on this HEAD: "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate satisfied on HEAD `<short-sha>` — two independent clean reviews (this pass + prior `<marker>`). Human authorization required to merge."
+   - If CLEAN and no other clean marker exists yet: "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; first of two independent clean reviews on HEAD `<short-sha>`. Run `/review <PR>` (or `/loop <PR>`) for the second — a different vendor if available (preferred), else this vendor again."
+   - If FINDINGS: "TOTAL P0=<total-p0> P1=<total-p1> P2=<total-p2> P3=<total-p3>. P0/P1/P2 blockers remain; findings posted. Run `/code` or `/loop <PR>` to address them (any vendor — the coder's identity doesn't matter)."
 
 ## Operate at maximum reasoning level. Anchor every finding to file:line.

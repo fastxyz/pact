@@ -10,8 +10,8 @@ You are running the PACT `/loop` command (see `commands/loop.md`). Vendor identi
 ## Required reading
 
 Same as `/code` plus:
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/roles/reviewer.md`
-- `https://raw.githubusercontent.com/fastxyz/pact/v1.0.7/commands/loop.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/v1.1.0/roles/reviewer.md`
+- `https://raw.githubusercontent.com/fastxyz/pact/v1.1.0/commands/loop.md`
 
 ## Argument parsing
 
@@ -58,7 +58,7 @@ Commits pushed this loop: <comma-separated short SHAs>
 
 Post via `Bash` (`gh pr comment <PR> --body-file <tempfile>`).
 
-5. Print to user: "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate (CONTRACT §7) needs a clean marker from a different vendor on HEAD `<short-sha>`. Switch to another vendor's CLI and run `/review <PR>` (or `/loop <PR>`)."
+5. Print to user, deriving from existing markers plus the `LOOP_DONE` just posted: if a prior independent clean marker (either vendor) is already on this HEAD → "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate satisfied on HEAD `<short-sha>` — two independent clean reviews. Human authorization required to merge."; otherwise → "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; first of two independent clean reviews on HEAD `<short-sha>`. Run `/review <PR>` (or `/loop <PR>`) for the second — a different vendor if available (preferred), else this vendor again."
 
 ## Notes
 

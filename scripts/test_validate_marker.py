@@ -171,8 +171,8 @@ CI status: green
     def test_review_clean_missing_existing_markers_field_fails(self):
         """v1.0.5: REVIEW_CLEAN without the 'Existing markers on HEAD' field is
         a contract violation. This is the field that forces the reviewer to read
-        the PR state before posting, enabling /review's round-zero check and
-        preventing stale 'needs another vendor' closing lines."""
+        the PR state before posting, enabling /review's gate-satisfied guard and
+        preventing stale 'needs another review' closing lines."""
         text = """REVIEW_CLEAN_claude-code_abc1234 TOTAL P0=0 P1=0 P2=0 P3=0 | CQ P0=0 P1=0 P2=0 P3=0 | SP P0=0 P1=0 P2=0 P3=0 | TC P0=0 P1=0 P2=0 P3=0
 
 Vendor: claude-code

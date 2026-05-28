@@ -20,7 +20,7 @@ The adapter is responsible for parsing both orders.
 1. Read `CONTRACT.md`, `roles/coder.md`, `roles/reviewer.md`
 2. Parse `[N]` from args; default 5 if absent
 3. Read the PR state (same as `/code` step 2)
-4. If the latest unresolved `REVIEW_FINDINGS` marker is from ANY vendor (different OR same): ingest those findings — the Coder phase must address them. The cross-vendor merge gate (§6) is enforced at the gate, not at the source of findings.
+4. If the latest unresolved `REVIEW_FINDINGS` marker is from ANY vendor (different OR same): ingest those findings — the Coder phase must address them. The merge gate (§1, §7) is enforced at the gate, not at the source of findings.
 5. **Round-zero check (nothing to address).** If ALL of the following hold:
    - The latest marker on the PR is a clean marker (`REVIEW_CLEAN_*` or `LOOP_DONE_*`) from any vendor, AND
    - There are NO unresolved `REVIEW_FINDINGS_*` markers anywhere on the PR (cross-vendor or same-vendor), AND
@@ -46,9 +46,11 @@ The adapter is responsible for parsing both orders.
 7. Post `LOOP_DONE_<vendor>_<sha> TOTAL P0=0 P1=0 P2=0 P3=<total-p3> | ...` per CONTRACT §5.5 format:
    - First line must include aggregate and per-lane P0/P1/P2/P3 totals.
    - Body must include: Vendor, HEAD, Internal rounds taken (the final value of `n`, or `0` if the round-zero check skipped the Coder phase), Final internal review per-lane counts, Gates, CI, Commits pushed this loop (empty list if round-zero exit).
-8. Print to the user: "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate (CONTRACT §7) needs a clean marker from a different vendor on HEAD `<sha>`. Switch to another vendor's CLI and run `/review <PR>` (or `/loop <PR>`)."
-
-   If the round-zero check fired (Internal rounds taken: 0), this `/loop` invocation has effectively cross-verified the existing HEAD. If a different vendor already has a clean marker on the same HEAD, the merge gate is now satisfied — print "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate satisfied on HEAD `<sha>` (this vendor + prior `<other-vendor>` clean marker). Human authorization required to merge." instead.
+8. Print to the user — derive the closing line from the existing markers on this HEAD plus the `LOOP_DONE` just posted (never from a template):
+   - **A prior independent clean marker (`REVIEW_CLEAN`/`LOOP_DONE`, either vendor) already exists on this HEAD** → two independent clean reviews now cover it; merge gate satisfied:
+     "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate satisfied on HEAD `<sha>` — two independent clean reviews (this loop + prior `<marker>`). Human authorization required to merge."
+   - **No other clean marker on this HEAD yet** → first of two:
+     "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; first of two independent clean reviews on HEAD `<sha>`. Run `/review <PR>` (or `/loop <PR>`) for the second — a different vendor if available (preferred), otherwise this vendor again."
 
 ## Edge cases
 
@@ -56,5 +58,5 @@ The adapter is responsible for parsing both orders.
 - **Cap-exhausted halt:** the first paragraph MUST start with `TOTAL P0=<a> P1=<b> P2=<c> P3=<d>.` and state that blockers remain before explaining the cap. The latest pushed commits remain on the PR. No `LOOP_DONE` marker is posted. The user can switch vendors and run `/review` to see what's blocking, or run `/code` to land a manual fix.
 - **External findings arrive mid-loop:** the loop reads markers only at step 3 (before entering). If a cross-vendor review posts during the loop, it's picked up on the next `/loop` invocation, not mid-run.
 - **Internal Reviewer finds zero issues on round 1:** loop exits with `Internal rounds taken: 1`. That's the ideal case for a /loop that addressed at least one finding.
-- **Round-zero exit (nothing to address):** when step 5's round-zero check fires, the loop posts `LOOP_DONE` with `Internal rounds taken: 0` and pushes no commits. This is the correct outcome when a different vendor has already posted a clean marker on the existing HEAD AND this vendor's self-review also finds it clean — the second vendor's confirmation is genuinely cross-checking, not redoing work.
-- **Cross-vendor confirmation flow:** the round-zero exit is the canonical "second vendor confirms first vendor's clean review" path. If you want the second vendor to LITERALLY just review (no Coder phase even allocated), use `/review` instead — `/loop`'s round-zero check makes the two effectively equivalent when there's nothing to do.
+- **Round-zero exit (nothing to address):** when step 5's round-zero check fires, the loop posts `LOOP_DONE` with `Internal rounds taken: 0` and pushes no commits. This is the correct outcome when a clean marker already exists on the HEAD AND this loop's self-review also finds it clean — a genuine independent confirmation, not redone work. If that prior marker was a different vendor's, this is the canonical cross-vendor confirmation that closes the gate.
+- **Second-pass confirmation flow:** the round-zero exit is the canonical "second independent pass confirms the first clean review" path (cross-vendor when a second vendor is available, same-vendor as the fallback). If you want a pass that LITERALLY just reviews (no Coder phase even allocated), use `/review` instead — `/loop`'s round-zero check makes the two effectively equivalent when there's nothing to do.
