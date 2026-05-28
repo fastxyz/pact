@@ -13,6 +13,8 @@ Run in an **isolated git worktree** bound to this PR's branch (CONTRACT §4a) �
 1. Read `CONTRACT.md` and `roles/reviewer.md`
 2. Read the PR state (same as `/code` step 2): HEAD SHA, full diff vs base branch, **and the full list of existing markers from ALL vendors on the current HEAD** (cross-vendor and same-vendor). The marker enumeration produced here is the value that lands in the marker body's `Existing markers on HEAD:` field (see step 8).
 
+   **Identify markers by the title prefix `REVIEW_CLEAN_<vendor>_` / `REVIEW_FINDINGS_<vendor>_` / `LOOP_DONE_<vendor>_` / `CODE_DONE_<vendor>_`, not by GitHub `authorLogin`** — every marker on the PR is posted via `gh pr comment` from the human operator's account, so all marker comments share the same author. See CONTRACT §5 ("Marker authorship").
+
    This enumeration is non-optional. Without it, the closing line in step 9 cannot be derived from observed state — and a closing line emitted from a template ("needs another vendor") will silently contradict the actual gate status when a prior vendor has already cleared.
 
 3. **Same-HEAD duplicate guard.** If a `REVIEW_CLEAN_<this-vendor>_<sha>` or `LOOP_DONE_<this-vendor>_<sha>` already exists on the current HEAD AND there are no unresolved `REVIEW_FINDINGS_*` markers, this vendor has already verified the current HEAD — re-posting would duplicate this vendor's own vote, not contribute to the merge gate. Print:

@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.1.1 — 2026-05-28
+
+### Clarification: marker authorship vs. vendor attribution
+
+- **New paragraph in CONTRACT §5: "Marker authorship: GitHub author ≠ vendor".** Every PACT marker is posted via `gh pr comment` from the human operator's GitHub account, so all marker comments on a given PR share the same `authorLogin`. The authoritative vendor attribution is the marker title's `<vendor>` token and the `Vendor:` field in the body — never the GitHub author. Concluding "the other vendor hasn't reviewed yet" because every comment is authored by the same human is the canonical PACT misread; this paragraph closes that confusion.
+- **`commands/review.md` step 2 reinforced.** When enumerating existing markers on HEAD, identify them by title prefix and `Vendor:` field, not by `authorLogin`. The instruction now points at the new CONTRACT §5 paragraph.
+
+Docs-only — no marker schema, lane, severity, escalation, or merge-gate change. Existing markers on existing PRs remain valid; agents that re-fetched `main` will read the clarified rule automatically.
+
 ## v1.1.0 — 2026-05-28
 
 ### Adds: workspace isolation for parallel PRs, explicit fluid-role model, explicit push-vs-merge boundary
