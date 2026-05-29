@@ -41,6 +41,8 @@ You only re-prime ("Learn https://github.com/fastxyz/pact") at the start of a ne
 | **[`adapters/`](adapters/)** | Per-vendor implementations (Claude Code, Codex CLI). |
 | **[`examples/`](examples/)** | An annotated PR-loop transcript showing the markers in action. |
 | **[`scripts/validate-marker.py`](scripts/validate-marker.py)** | Stdlib Python parser/validator for any PACT marker. Useful for CI. |
+| **[`scripts/pact_format_event.py`](scripts/pact_format_event.py)** | Deterministic Slack/Markdown formatter for structured PACT progress events. |
+| **[`scripts/pact_progress_watch.py`](scripts/pact_progress_watch.py)** | `progress.jsonl` watcher that emits only new formatted PACT status blocks. |
 | **[`CHANGELOG.md`](CHANGELOG.md)** | Semver releases. |
 
 ## The merge gate, restated
@@ -81,6 +83,43 @@ python3 scripts/validate-marker.py < my-marker.txt
 ```
 
 Exit code 0 = valid; 1 = invalid (errors on stderr). Useful for a GitHub Action that lints new PR comments for marker conformance.
+
+## Progress reporting helpers
+
+PACT itself is GitHub-comment based, but operators often want compact Slack-style progress updates while detached agent loops run. Use structured JSON events plus the deterministic formatter instead of asking an LLM to improvise status text.
+
+A `/loop` or `/review` runner can append JSON lines to `progress.jsonl`:
+
+```json
+{"event":"round","round":2,"head":"ad29edbc7668606ddf8a43bf9651445af0a62691","p0":0,"p1":0,"p2":1,"p3":0,"summary":"Found one blocking issue.","findings":[{"severity":"P2","lane":"SP","loc":"apps/api/public/assets/chat-widget.js:5059-5072","issue":"Concise issue text."}]}
+```
+
+Format one event:
+
+```bash
+python3 scripts/pact_format_event.py \
+  --repo fastxyz/fast-shop \
+  --pr 443 \
+  --vendor-label Codex \
+  --mode loop \
+  --event-file event.json
+```
+
+Watch a detached run and emit only new updates:
+
+```bash
+python3 scripts/pact_progress_watch.py \
+  --run-dir .pact/runs/pr-443-codex-loop-20260529T211003Z \
+  --repo fastxyz/fast-shop \
+  --pr 443 \
+  --vendor codex-cli \
+  --vendor-label Codex \
+  --mode loop \
+  --session pact-codex-pr443-loop \
+  --stats .pact/stats.json
+```
+
+Clean final loop rounds are merged with `LOOP_DONE` into one block. Every PR, commit, marker comment, and file/line reference is emitted as a clickable GitHub link when enough data is present.
 
 ## Versioning
 
