@@ -40,6 +40,7 @@ You only re-prime ("Learn https://github.com/fastxyz/pact") at the start of a ne
 | **[`commands/`](commands/)** | What `/code`, `/loop`, and `/review` do. Vendor-agnostic. |
 | **[`adapters/`](adapters/)** | Per-vendor implementations (Claude Code, Codex CLI). |
 | **[`examples/`](examples/)** | An annotated PR-loop transcript showing the markers in action. |
+| **[`docs/standalone-cli-design.md`](docs/standalone-cli-design.md)** | Design roadmap for turning PACT into a standalone CLI/tooling package. |
 | **[`scripts/validate-marker.py`](scripts/validate-marker.py)** | Stdlib Python parser/validator for any PACT marker. Useful for CI. |
 | **[`scripts/pact_format_event.py`](scripts/pact_format_event.py)** | Deterministic Slack/Markdown formatter for structured PACT progress events. |
 | **[`scripts/pact_progress_watch.py`](scripts/pact_progress_watch.py)** | `progress.jsonl` watcher that emits only new formatted PACT status blocks. |
