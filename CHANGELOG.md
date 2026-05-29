@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added: deterministic marker rendering helper
+
+- Add `scripts/pact_format_marker.py`, a stdlib JSON-to-marker formatter for `CODE_DONE`, `LOOP_DONE`, `REVIEW_CLEAN`, and `REVIEW_FINDINGS` comments. It emits the current CONTRACT §5.5 schema, validates its own output with `scripts/validate-marker.py` by default, and refuses clean markers with nonzero P0/P1/P2 counts.
+- Add formatter tests covering clean loop markers, clean review markers with existing-marker enumeration, findings markers with computed lane counts, and rejection of malformed clean-marker payloads.
+- Document the marker formatter in `README.md` and direct `/loop` and `/review` command implementations to prefer it over hand-written marker text, preventing drift such as `CQ PASS | SP PASS | TC PASS` shorthand.
+
+No marker schema, lane, severity, escalation, or merge-gate change.
+
 ### Added: deterministic progress reporting helpers
 
 - Add `scripts/pact_format_event.py`, a stdlib formatter that converts structured PACT progress JSON events into compact Slack/Markdown blocks with clickable PR, marker-comment, commit, and file/line links.
