@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added: deterministic progress reporting helpers
+
+- Add `scripts/pact_format_event.py`, a stdlib formatter that converts structured PACT progress JSON events into compact Slack/Markdown blocks with clickable PR, marker-comment, commit, and file/line links.
+- Add `scripts/pact_progress_watch.py`, a `progress.jsonl` watcher for detached `/loop` and `/review` runs. It remembers reported lines, merges a clean final round with `LOOP_DONE`, and emits only new progress blocks suitable for cron/no-agent delivery.
+- Document structured progress events and the watcher/formatter workflow in `README.md`.
+
+No marker schema, lane, severity, escalation, or merge-gate change.
+
 ## v1.1.1 — 2026-05-28
 
 ### Clarification: marker authorship vs. vendor attribution
