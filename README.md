@@ -42,6 +42,7 @@ You only re-prime ("Learn https://github.com/fastxyz/pact") at the start of a ne
 | **[`examples/`](examples/)** | An annotated PR-loop transcript showing the markers in action. |
 | **[`docs/standalone-cli-design.md`](docs/standalone-cli-design.md)** | Design roadmap for turning PACT into a standalone CLI/tooling package. |
 | **[`scripts/validate-marker.py`](scripts/validate-marker.py)** | Stdlib Python parser/validator for any PACT marker. Useful for CI. |
+| **[`scripts/pact_format_marker.py`](scripts/pact_format_marker.py)** | Stdlib JSON-to-marker formatter that renders current-schema `CODE_DONE`, `LOOP_DONE`, `REVIEW_CLEAN`, and `REVIEW_FINDINGS` comments and validates them before printing. |
 | **[`scripts/pact_format_event.py`](scripts/pact_format_event.py)** | Deterministic Slack/Markdown formatter for structured PACT progress events. |
 | **[`scripts/pact_progress_watch.py`](scripts/pact_progress_watch.py)** | `progress.jsonl` watcher that emits only new formatted PACT status blocks. |
 | **[`CHANGELOG.md`](CHANGELOG.md)** | Semver releases. |
@@ -84,6 +85,26 @@ python3 scripts/validate-marker.py < my-marker.txt
 ```
 
 Exit code 0 = valid; 1 = invalid (errors on stderr). Useful for a GitHub Action that lints new PR comments for marker conformance.
+
+## Formatting markers
+
+Agents and wrappers should render markers from JSON instead of hand-writing comment text. This prevents drift such as `CQ PASS | SP PASS | TC PASS` shorthand after the contract requires explicit per-lane counts.
+
+```bash
+python3 scripts/pact_format_marker.py --marker-json '{
+  "kind":"REVIEW_CLEAN",
+  "vendor":"claude-code",
+  "head":"d0a1b22c0ffee1234567890abcdef1234567890ab",
+  "existing_markers":[{"title":"LOOP_DONE_codex-cli_d0a1b22c0ffee1234567890abcdef1234567890ab"}],
+  "lanes":{"CQ":{"p0":0,"p1":0,"p2":0,"p3":0},"SP":{"p0":0,"p1":0,"p2":0,"p3":0},"TC":{"p0":0,"p1":0,"p2":0,"p3":0}},
+  "gates":"typecheck=PASS, lint=PASS, test=PASS",
+  "ci_status":"green"
+}' > marker.txt
+python3 scripts/validate-marker.py marker.txt
+gh pr comment 282 --body-file marker.txt
+```
+
+`pact_format_marker.py` validates its own output by default and exits non-zero rather than printing a malformed marker.
 
 ## Progress reporting helpers
 

@@ -47,7 +47,7 @@ Run in an **isolated git worktree** bound to this PR's branch (CONTRACT §4a) �
    e. If 0 P0/P1/P2 AND gates green: exit the internal loop successfully → go to step 7
    f. If `n >= N` (cap exhausted): halt per CONTRACT §8 trigger 5; do NOT post `LOOP_DONE`; print `TOTAL P0=<a> P1=<b> P2=<c> P3=<d>. P0/P1/P2 blockers remain; loop cap N=<N> exhausted at HEAD <sha>.` before any other halt detail; exit
    g. Else: increment `n`; go to (a), addressing the self-review's findings
-7. Post `LOOP_DONE_<vendor>_<sha> TOTAL P0=0 P1=0 P2=0 P3=<total-p3> | ...` per CONTRACT §5.5 format:
+7. Post `LOOP_DONE_<vendor>_<sha> TOTAL P0=0 P1=0 P2=0 P3=<total-p3> | ...` per CONTRACT §5.5 format. Prefer generating the comment with `scripts/pact_format_marker.py` from structured JSON and validating it with `scripts/validate-marker.py` before `gh pr comment`; do not hand-write shorthand such as `CQ PASS | SP PASS | TC PASS`.
    - First line must include aggregate and per-lane P0/P1/P2/P3 totals.
    - Body must include: Vendor, HEAD, Internal rounds taken (the final value of `n`, or `0` if the round-zero check skipped the Coder phase), Final internal review per-lane counts, Gates, CI, Commits pushed this loop (empty list if round-zero exit).
 8. Print to the user: "TOTAL P0=0 P1=0 P2=0 P3=<total-p3>. P0/P1/P2 are zero; merge gate (CONTRACT §7) needs a clean marker from a different vendor on HEAD `<sha>`. Switch to another vendor's CLI and run `/review <PR>` (or `/loop <PR>`)."
